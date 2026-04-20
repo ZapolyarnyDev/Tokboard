@@ -1,0 +1,24 @@
+{
+  "name": "tokboard",
+  "version": "1.0.0",
+  "description": "Интерактивная доска задач",
+  "homepage": "https://github.com/ZapolyarnyDev/Tokboard#readme",
+  "bugs": {
+    "url": "https://github.com/ZapolyarnyDev/Tokboard/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZapolyarnyDev/Tokboard.git"
+  },
+  "license": "ISC",
+  "author": "Bodrov Daniil",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}
