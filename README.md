@@ -39,4 +39,4 @@
             <td><a href="https://github.com/King-Ssouls">King-Ssouls</a></td>
         </tr>
     </tbody>
-</table>d
+</table>
