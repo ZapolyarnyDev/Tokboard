@@ -1,0 +1,36 @@
+{
+  "name": "tokboard",
+  "version": "1.0.0",
+  "description": "Интерактивная доска задач",
+  "homepage": "https://github.com/ZapolyarnyDev/Tokboard#readme",
+  "bugs": {
+    "url": "https://github.com/ZapolyarnyDev/Tokboard/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZapolyarnyDev/Tokboard.git"
+  },
+  "license": "ISC",
+  "author": "Bodrov Daniil",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.7.0",
+    "@prisma/client": "^7.7.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.8.3",
+    "prisma": "^7.7.0"
+  }
+}
