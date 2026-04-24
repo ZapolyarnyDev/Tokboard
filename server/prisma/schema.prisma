@@ -11,3 +11,72 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  email String @unique
+  name  String
+  role  Role   @default(USER)
+
+  boards Board[]
+}
+
+model Board {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title String
+
+  owner   User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId Int
+
+  objects BoardObject[]
+}
+
+model BoardObject {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  type ObjectType
+
+  x      Float
+  y      Float
+  width  Float?
+  height Float?
+
+  rotation Float @default(0)
+
+  strokeColor String?
+  fillColor   String?
+  strokeWidth Float?
+
+  text      String?
+  fontSize  Float?
+  fontColor String?
+
+  imageUrl String?
+
+  points Json?
+
+  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId Int
+}
+
+enum ObjectType {
+  TEXT
+  IMAGE
+  LINE
+  RECTANGLE
+  TRIANGLE
+  CIRCLE
+}
+
+enum Role {
+  USER
+  TEAMLEAD
+}
