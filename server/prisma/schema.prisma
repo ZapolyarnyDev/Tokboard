@@ -42,7 +42,7 @@ model BoardObject {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  type ObjectType
+  type BoardObjectType
 
   x      Float
   y      Float
@@ -51,29 +51,70 @@ model BoardObject {
 
   rotation Float @default(0)
 
+  textData  TextObjectData?
+  imageData ImageObjectData?
+  shapeData ShapeObjectData?
+
+  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId Int
+
+  @@index([boardId])
+  @@index([type])
+}
+
+model TextObjectData {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  text      String
+  fontSize  Float?
+  fontColor String?
+
+  boardObject   BoardObject @relation(fields: [boardObjectId], references: [id], onDelete: Cascade)
+  boardObjectId String      @unique
+}
+
+model ImageObjectData {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  imageUrl String
+
+  boardObject   BoardObject @relation(fields: [boardObjectId], references: [id], onDelete: Cascade)
+  boardObjectId String      @unique
+}
+
+model ShapeObjectData {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  kind ShapeKind
+
   strokeColor String?
   fillColor   String?
   strokeWidth Float?
 
-  text      String?
-  fontSize  Float?
-  fontColor String?
-
-  imageUrl String?
-
   points Json?
 
-  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  boardId Int
+  boardObject   BoardObject @relation(fields: [boardObjectId], references: [id], onDelete: Cascade)
+  boardObjectId String      @unique
 }
 
-enum ObjectType {
+enum BoardObjectType {
   TEXT
   IMAGE
+  SHAPE
+}
+
+enum ShapeKind {
   LINE
   RECTANGLE
   TRIANGLE
   CIRCLE
+  POLYGON
 }
 
 enum Role {
