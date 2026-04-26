@@ -64,8 +64,6 @@ model BoardObject {
 
 model TextObjectData {
   id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   text      String
   fontSize  Float?
@@ -77,8 +75,6 @@ model TextObjectData {
 
 model ImageObjectData {
   id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   imageUrl String
 
@@ -88,8 +84,6 @@ model ImageObjectData {
 
 model ShapeObjectData {
   id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   kind ShapeKind
 
