@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  email String @unique
+  name  String
+  role  Role   @default(USER)
+
+  boards Board[]
+}
+
+model Board {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title String
+
+  owner   User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId Int
+
+  objects BoardObject[]
+}
+
+model BoardObject {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  type BoardObjectType
+
+  x      Float
+  y      Float
+  width  Float?
+  height Float?
+
+  rotation Float @default(0)
+
+  textData  TextObjectData?
+  imageData ImageObjectData?
+  shapeData ShapeObjectData?
+
+  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId Int
+
+  @@index([boardId])
+  @@index([type])
+}
+
+model TextObjectData {
+  id        String   @id @default(uuid())
+
+  text      String
+  fontSize  Float?
+  fontColor String?
+
+  boardObject   BoardObject @relation(fields: [boardObjectId], references: [id], onDelete: Cascade)
+  boardObjectId String      @unique
+}
+
+model ImageObjectData {
+  id        String   @id @default(uuid())
+
+  imageUrl String
+
+  boardObject   BoardObject @relation(fields: [boardObjectId], references: [id], onDelete: Cascade)
+  boardObjectId String      @unique
+}
+
+model ShapeObjectData {
+  id        String   @id @default(uuid())
+
+  kind ShapeKind
+
+  strokeColor String?
+  fillColor   String?
+  strokeWidth Float?
+
+  points Json?
+
+  boardObject   BoardObject @relation(fields: [boardObjectId], references: [id], onDelete: Cascade)
+  boardObjectId String      @unique
+}
+
+enum BoardObjectType {
+  TEXT
+  IMAGE
+  SHAPE
+}
+
+enum ShapeKind {
+  LINE
+  RECTANGLE
+  TRIANGLE
+  CIRCLE
+  POLYGON
+}
+
+enum Role {
+  USER
+  TEAMLEAD
+}
