@@ -1,10 +1,7 @@
-<script setup>
-</script>
-
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <h1 class="text-5xl font-bold text-blue-600">
-      Board Project 🚀
-    </h1>
-  </div>
+  <Home />
 </template>
+
+<script setup>
+import Home from "./pages/Home.vue"
+</script>

@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import "tailwindcss";
+
+:root {
+  --color-bg-primary:   #FFFFFF;
+  --color-bg-secondary: #F4F7FA;
+  --color-bg-tertiary:  #EEF2F6;
+
+  --color-accent:        #4DA3FF;
+  --color-accent-hover:  #3C8EE6;
+  --color-accent-active: #2F76C7;
+  --color-accent-light:  #EAF4FF;
+
+  --color-text-primary:   #1E1E1E;
+  --color-text-secondary: #5F6368;
+  --color-text-muted:     #8B8F94;
+
+  --color-border-default: #E3E6EB;
+  --color-border-hover:   #D6DAE1;
+  --color-border-active:  #4DA3FF;
+}
+
+body {
+  @apply bg-bg-primary text-text-primary font-body;
+}
