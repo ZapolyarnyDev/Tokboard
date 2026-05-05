@@ -1,10 +1,18 @@
 <script setup>
+import { useAuthStore } from "./stores/auth"
+import GuestDashboard from "./pages/GuestDashboard.vue"
+import MainLayout from "./components/layout/MainLayout.vue"
+import TheHeader from "./components/layout/TheHeader.vue"
+
+const auth = useAuthStore()
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <h1 class="text-5xl font-bold text-blue-600">
-      Board Project 🚀
-    </h1>
+  <div class="flex h-screen flex-col overflow-hidden bg-bg-primary">
+    <TheHeader />
+    <div class="min-h-0 flex-1">
+      <GuestDashboard v-if="!auth.isAuthenticated" />
+      <MainLayout v-else />
+    </div>
   </div>
 </template>
