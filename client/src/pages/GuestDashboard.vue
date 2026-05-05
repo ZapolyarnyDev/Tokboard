@@ -4,6 +4,7 @@ import { Image, MousePointer2, Move, Shapes, Trash2, Wifi } from "lucide-vue-nex
 import { useAuthStore } from "../stores/auth"
 import UiButton from "../components/ui/UiButton.vue"
 import UiInput from "../components/ui/UiInput.vue"
+import UiTypography from "../components/ui/UiTypography.vue"
 
 const auth = useAuthStore()
 const email = ref("")
@@ -12,7 +13,7 @@ const password = ref("")
 const capabilities = [
   { icon: Shapes, title: "6 типов объектов", text: "текст, изображение, линия, прямоугольник, треугольник и круг" },
   { icon: Move, title: "Редактирование", text: "координаты, размеры, цвет, толщина линии и заливка" },
-  { icon: Wifi, title: "Синхронизация", text: "события create, update, move и delete через WebSocket" }
+  { icon: Wifi, title: "Работа в реальном времени", text: "изменения на доске сразу видны всем участникам" }
 ]
 
 const handleLogin = () => {
@@ -25,13 +26,13 @@ const handleLogin = () => {
     <main class="grid min-h-full grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.86fr)]">
       <section class="flex items-center border-r border-border bg-white px-6 py-10 md:px-10 lg:px-14">
         <div class="w-full max-w-3xl">
-          <h1 class="max-w-2xl font-heading text-[32px] font-bold leading-tight text-text-primary md:text-[40px]">
+          <UiTypography.H1 class="max-w-2xl text-[32px] font-bold md:text-[40px]">
             Интерактивная доска для совместной работы с объектами
-          </h1>
+          </UiTypography.H1>
 
-          <p class="mt-5 max-w-2xl text-base leading-7 text-text-secondary">
+          <UiTypography.Text class="mt-5 max-w-2xl leading-7" size="lg" tone="secondary">
             Tokboard помогает участникам группы создавать, перемещать и редактировать объекты на общей доске, а изменения синхронизируются у всех подключённых пользователей в реальном времени.
-          </p>
+          </UiTypography.Text>
 
           <div class="mt-8 grid gap-3 md:grid-cols-3">
             <article
@@ -40,12 +41,12 @@ const handleLogin = () => {
               class="border border-border bg-bg-primary p-4"
             >
               <component :is="item.icon" :size="20" :stroke-width="2" class="text-accent" />
-              <h2 class="mt-4 font-heading text-sm font-semibold text-text-primary">
+              <UiTypography.Title as="h2" class="mt-4 text-sm" size="h4">
                 {{ item.title }}
-              </h2>
-              <p class="mt-2 text-sm leading-6 text-text-secondary">
+              </UiTypography.Title>
+              <UiTypography.Text class="mt-2 leading-6" size="md" tone="secondary">
                 {{ item.text }}
-              </p>
+              </UiTypography.Text>
             </article>
           </div>
 
@@ -64,18 +65,18 @@ const handleLogin = () => {
           <div class="flex h-12 items-center justify-between border-b border-border px-4">
             <div class="flex items-center gap-2">
               <span class="h-3 w-3 border border-accent bg-accent-light" />
-              <span class="font-heading text-xs uppercase text-text-muted">Live Canvas</span>
+              <UiTypography.Code as="span" class="uppercase" size="sm" tone="muted">Live Canvas</UiTypography.Code>
             </div>
-            <div class="flex items-center gap-2 text-xs text-text-muted">
+            <UiTypography.Muted as="div" class="flex items-center gap-2" size="sm">
               <MousePointer2 :size="14" />
               3 участника
-            </div>
+            </UiTypography.Muted>
           </div>
 
           <div class="relative h-[calc(100%-3rem)] overflow-hidden bg-[linear-gradient(var(--color-border-default)_1px,transparent_1px),linear-gradient(90deg,var(--color-border-default)_1px,transparent_1px)] bg-[size:48px_48px]">
             <div class="canvas-object object-text">
-              <span class="font-heading text-xs text-text-muted">TEXT</span>
-              <p class="mt-2 text-sm text-text-primary">Согласовать макет</p>
+              <UiTypography.Code as="span" size="sm" tone="muted">TEXT</UiTypography.Code>
+              <UiTypography.Text class="mt-2" size="md">Согласовать макет</UiTypography.Text>
             </div>
 
             <div class="canvas-object object-image">
