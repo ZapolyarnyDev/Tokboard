@@ -19,6 +19,9 @@
   --color-border-default: #E3E6EB;
   --color-border-hover:   #D6DAE1;
   --color-border-active:  #4DA3FF;
+
+  --radius: 0;
+  --transition: 150ms ease-out;
 }
 
 body {
