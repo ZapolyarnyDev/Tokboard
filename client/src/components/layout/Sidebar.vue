@@ -30,7 +30,11 @@ const data = [
 </script>
 
 <template>
-  <aside class="w-64 h-full border-r border-border bg-bg-primary flex flex-col">
+  <aside
+    id="workspace-menu"
+    tabindex="-1"
+    class="w-64 h-full border-r border-border bg-bg-primary flex flex-col focus:outline-none focus:ring-1 focus:ring-inset focus:ring-accent"
+  >
     <div class="p-4 border-b border-border">
       <h2 class="font-heading font-bold text-lg">PROJECT</h2>
     </div>

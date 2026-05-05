@@ -14,8 +14,8 @@ const handleLogin = () => {
 </script>
 
 <template>
-  <div class="h-screen w-full flex items-center justify-center bg-bg-secondary">
-    <div class="w-full max-w-sm p-8 bg-white border border-border rounded-none">
+  <div class="h-full w-full flex items-center justify-center bg-bg-secondary px-4">
+    <div id="login" class="w-full max-w-sm p-8 bg-white border border-border rounded-none">
       <h1 class="text-2xl font-heading font-bold mb-6">
         PROJECT / ВХОД
       </h1>
