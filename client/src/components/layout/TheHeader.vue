@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from "vue"
-import { ChevronDown, Columns3, LogIn, PanelLeft, Workflow } from "lucide-vue-next"
+import { ChevronDown, Columns3, LayoutDashboard, LogIn, PanelLeft, Workflow } from "lucide-vue-next"
 import { useAuthStore } from "../../stores/auth"
 import { useUiStore } from "../../stores/ui"
 
@@ -10,9 +10,9 @@ const isMenuOpen = ref(false)
 
 const userName = computed(() => auth.user?.name || "Пользователь")
 const userEmail = computed(() => auth.user?.email || "workspace@tokboard")
-const pageTitle = computed(() => (auth.isAuthenticated ? ui.activeBoard : "Вход в систему"))
-const pageType = computed(() => (auth.isAuthenticated ? "Доска" : "Авторизация"))
-const PageIcon = computed(() => (auth.isAuthenticated ? Columns3 : LogIn))
+const pageTitle = computed(() => (auth.isAuthenticated ? ui.activeBoard : "Обзор проекта"))
+const pageType = computed(() => (auth.isAuthenticated ? "Доска" : "Главная"))
+const PageIcon = computed(() => (auth.isAuthenticated ? Columns3 : LayoutDashboard))
 
 const userInitials = computed(() => {
   return userName.value
