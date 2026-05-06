@@ -1,3 +1,5 @@
+import { WebSocket } from 'ws'
+
 export class BoardGateway {
   constructor(boardService) {
     this.boardService = boardService
@@ -6,7 +8,12 @@ export class BoardGateway {
 
   handleConnection(ws) {
     ws.on('message', async (msg) => {
-      const data = JSON.parse(msg)
+      let data
+      try {
+        data = JSON.parse(msg)
+      } catch {
+        return
+      }
 
       switch (data.type) {
         case 'join-board':
@@ -14,6 +21,7 @@ export class BoardGateway {
           break
 
         case 'move-object':
+          if (!ws.boardId) return
           await this.handleMove(ws, data)
           break
       }
@@ -23,6 +31,12 @@ export class BoardGateway {
   }
 
   joinBoard(ws, boardId) {
+    if (!boardId) return
+
+    if (ws.boardId && ws.boardId !== boardId) {
+      this.boards.get(ws.boardId)?.delete(ws)
+    }
+
     if (!this.boards.has(boardId)) {
       this.boards.set(boardId, new Set())
     }
@@ -35,7 +49,9 @@ export class BoardGateway {
     const boardId = ws.boardId
     if (!boardId) return
 
-    this.boards.get(boardId)?.delete(ws)
+    const clients = this.boards.get(boardId)
+    clients?.delete(ws)
+    if (clients?.size === 0) this.boards.delete(boardId)
   }
 
   broadcast(boardId, event) {
@@ -43,8 +59,19 @@ export class BoardGateway {
     if (!clients) return
 
     for (const client of clients) {
-      client.send(JSON.stringify(event))
+      if (client.readyState !== WebSocket.OPEN) {
+        clients.delete(client)
+        continue
+      }
+
+      try {
+        client.send(JSON.stringify(event))
+      } catch {
+        clients.delete(client)
+      }
     }
+
+    if (clients.size === 0) this.boards.delete(boardId)
   }
 
   async handleMove(ws, data) {

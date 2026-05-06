@@ -1,12 +1,14 @@
 import 'dotenv/config'
 import express from 'express'
+import { createServer } from 'node:http'
+import { WebSocketServer } from 'ws'
 
 const app = express()
-const port = process.env.PORT
+const port = process.env.PORT ?? 3000
 
-import { BoardGateway } from './modules/board/board.gateway.js'
-import { BoardRepository } from './modules/board/board.repository.js'
-import { BoardService } from './modules/board/board.service.js'
+import { BoardRepository } from './src/modules/board/repository.js'
+import { BoardService } from './src/modules/board/service.js'
+import { BoardGateway } from './src/modules/board/gateway.js'
 
 app.use(express.json())
 const server = createServer(app)
@@ -26,6 +28,6 @@ wss.on('connection', (ws) => {
   boardGateway.handleConnection(ws)
 })
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
+server.listen(port, () => {
+  console.log(`Server listening on port ${port}`)
 })

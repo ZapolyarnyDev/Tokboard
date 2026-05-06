@@ -1,4 +1,4 @@
-import { prisma } from '../prisma'
+import { prisma } from '../../config/database.js'
 
 export class BoardRepository {
   async updatePosition(id, data) {
