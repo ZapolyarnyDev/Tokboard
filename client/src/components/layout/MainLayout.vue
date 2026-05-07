@@ -1,5 +1,7 @@
 <script setup>
 import Sidebar from "./Sidebar.vue"
+import CanvasBoard from "../canvas/CanvasBoard.vue"
+import Toolbar from "../canvas/Toolbar.vue"
 </script>
 
 <template>
@@ -7,13 +9,15 @@ import Sidebar from "./Sidebar.vue"
     <Sidebar />
     
     <div class="flex-1 flex flex-col overflow-hidden">
+      
+      <Toolbar />
+
       <main class="flex-1 relative bg-bg-secondary p-4">
-        <div class="w-full h-full border border-border bg-white rounded-none flex items-center justify-center">
-          <p class="text-text-muted font-heading text-sm">
-            РАБОЧАЯ ОБЛАСТЬ (Canvas будет здесь)
-          </p>
+        <div class="w-full h-full border border-border bg-white rounded-none overflow-hidden">
+          <CanvasBoard />
         </div>
       </main>
+
     </div>
   </div>
 </template>
