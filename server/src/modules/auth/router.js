@@ -4,6 +4,15 @@ import { AuthRepository } from './repository.js'
 import { AuthService } from './service.js'
 import { verifyRefreshToken } from './jwt.js'
 import { requireAuth } from '../../middlewares/auth.js'
+import {
+  validateEmail,
+  validatePassword,
+  validateName,
+} from '../../utils/validation.js'
+import {
+  authLimiter,
+  generalAuthLimiter,
+} from '../../middlewares/rateLimiter.js'
 
 const router = express.Router()
 
@@ -36,12 +45,17 @@ function clearRefreshCookie(res) {
   })
 }
 
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   const { email, name, password } = req.body ?? {}
-  if (!email || !name || !password) {
-    return res
-      .status(400)
-      .json({ message: 'email, name, password are required' })
+
+  if (!validateEmail(email)) {
+    return res.status(400).json({ message: 'Invalid email format' })
+  }
+  if (!validateName(name)) {
+    return res.status(400).json({ message: 'Invalid name' })
+  }
+  if (!validatePassword(password)) {
+    return res.status(400).json({ message: 'Password must be 8-128 characters' })
   }
 
   try {
@@ -57,10 +71,14 @@ router.post('/register', async (req, res) => {
   }
 })
 
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   const { email, password } = req.body ?? {}
-  if (!email || !password) {
-    return res.status(400).json({ message: 'email and password are required' })
+
+  if (!validateEmail(email)) {
+    return res.status(400).json({ message: 'Invalid email format' })
+  }
+  if (!validatePassword(password)) {
+    return res.status(400).json({ message: 'Invalid password' })
   }
 
   try {
@@ -76,7 +94,7 @@ router.post('/login', async (req, res) => {
   }
 })
 
-router.post('/refresh', async (req, res) => {
+router.post('/refresh', generalAuthLimiter, async (req, res) => {
   const refreshToken = req.cookies?.[REFRESH_COOKIE] ?? req.body?.refreshToken
   if (!refreshToken) {
     return res.status(401).json({ message: 'Missing refresh token' })

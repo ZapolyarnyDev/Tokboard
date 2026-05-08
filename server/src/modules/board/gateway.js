@@ -1,10 +1,32 @@
 import { WebSocket } from 'ws'
 import { verifyAccessToken } from '../auth/jwt.js'
+import { validateMovePayload } from '../../utils/validation.js'
 
 export class BoardGateway {
   constructor(boardService) {
     this.boardService = boardService
     this.boards = new Map()
+    this.rateLimits = new Map()
+  }
+
+  checkRateLimit(userId) {
+    const now = Date.now()
+    const limit = this.rateLimits.get(userId)
+
+    if (!limit || now > limit.resetAt) {
+      this.rateLimits.set(userId, {
+        count: 1,
+        resetAt: now + 1000,
+      })
+      return true
+    }
+
+    if (limit.count >= 10) {
+      return false
+    }
+
+    limit.count++
+    return true
   }
 
   handleConnection(ws) {
@@ -38,6 +60,10 @@ export class BoardGateway {
         case 'move-object':
           if (process.env.WS_REQUIRE_AUTH === 'true' && !ws.user) return
           if (!ws.boardId) return
+
+          const userId = ws.user?.sub || 'anonymous'
+          if (!this.checkRateLimit(userId)) return
+
           await this.handleMove(ws, data)
           break
       }
@@ -91,6 +117,10 @@ export class BoardGateway {
   }
 
   async handleMove(ws, data) {
+    if (!validateMovePayload(data.payload)) {
+      return
+    }
+
     const updated = await this.boardService.moveObject(data.payload)
 
     this.broadcast(ws.boardId, {

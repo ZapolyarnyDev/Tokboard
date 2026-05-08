@@ -24,8 +24,8 @@ export class AuthService {
   async register({ email, name, password }) {
     const existing = await this.repo.findUserByEmail(email)
     if (existing) {
-      const err = new Error('Email already in use')
-      err.statusCode = 409
+      const err = new Error('Registration failed')
+      err.statusCode = 400
       throw err
     }
 
@@ -70,33 +70,18 @@ export class AuthService {
     }
 
     const tokenHash = tokenSha256(refreshToken)
-    const record = await this.repo.findRefreshTokenByHash(tokenHash)
-    if (!record || record.revokedAt) {
-      const err = new Error('Refresh token revoked')
-      err.statusCode = 401
-      throw err
-    }
-
-    if (record.expiresAt.getTime() <= Date.now()) {
-      await this.repo.revokeRefreshToken(record.id).catch(() => {})
-      const err = new Error('Refresh token expired')
-      err.statusCode = 401
-      throw err
-    }
-
     const userId = Number(decoded.sub)
-    const user = await this.repo.findUserById(userId)
-    if (!user) {
-      await this.repo.revokeRefreshToken(record.id).catch(() => {})
-      const err = new Error('Invalid refresh token')
+
+    const result = await this.repo.rotateRefreshToken(tokenHash, userId)
+
+    if (!result.success) {
+      const err = new Error(result.error)
       err.statusCode = 401
       throw err
     }
 
-    // rotation: revoke current, issue a new pair
-    await this.repo.revokeRefreshToken(record.id)
-    const tokens = await this.issueTokens(user)
-    return { user: this.publicUser(user), ...tokens }
+    const tokens = await this.issueTokens(result.user)
+    return { user: this.publicUser(result.user), ...tokens }
   }
 
   async logout({ refreshToken }) {
