@@ -22,7 +22,28 @@ model User {
   name  String
   role  Role   @default(USER)
 
+  passwordHash String
+
   boards Board[]
+
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  revokedAt DateTime?
+
+  tokenHash String   @unique
+  jti       String   @unique
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Board {

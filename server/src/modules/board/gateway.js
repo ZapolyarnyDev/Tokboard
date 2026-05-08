@@ -1,4 +1,5 @@
 import { WebSocket } from 'ws'
+import { verifyAccessToken } from '../auth/jwt.js'
 
 export class BoardGateway {
   constructor(boardService) {
@@ -7,6 +8,8 @@ export class BoardGateway {
   }
 
   handleConnection(ws) {
+    ws.user = null
+
     ws.on('message', async (msg) => {
       let data
       try {
@@ -16,11 +19,24 @@ export class BoardGateway {
       }
 
       switch (data.type) {
+        case 'auth': {
+          const token = data.accessToken
+          if (!token) return
+          try {
+            ws.user = verifyAccessToken(token)
+          } catch {
+            ws.user = null
+          }
+          break
+        }
+
         case 'join-board':
+          if (process.env.WS_REQUIRE_AUTH === 'true' && !ws.user) return
           this.joinBoard(ws, data.boardId)
           break
 
         case 'move-object':
+          if (process.env.WS_REQUIRE_AUTH === 'true' && !ws.user) return
           if (!ws.boardId) return
           await this.handleMove(ws, data)
           break
