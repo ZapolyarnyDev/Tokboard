@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount, computed } from "vue"
 import { useUiStore } from "../../stores/ui"
+import StylePanel from "./StylePanel.vue"
 
 const ui = useUiStore()
 const canvasRef = ref(null)
@@ -527,7 +528,9 @@ const handleCanvasClick = (e) => {
       y: snapToGrid(point.y),
       width: 120,
       height: 30,
-      text: "Введите текст"
+      text: "Введите текст",
+      fontSize: 14,
+      color: "#000000"
     }
 
     state.shapes.push(shape)
@@ -574,6 +577,37 @@ const handleFileChange = (e) => {
   e.target.value = ""
 }
 
+const selectedShapes = computed(() => {
+  return state.shapes.filter(s => state.selectedIds.includes(s.id))
+})
+
+const handleStyleUpdate = ({ property, value }) => {
+  state.selectedIds.forEach(id => {
+    const shape = state.shapes.find(s => s.id === id)
+    if (!shape) return
+
+    if (property === 'x') {
+      if (shape.type === 'line') {
+        const dx = value - shape.x1
+        shape.x1 = value
+        shape.x2 += dx
+      } else {
+        shape.x = value
+      }
+    } else if (property === 'y') {
+      if (shape.type === 'line') {
+        const dy = value - shape.y1
+        shape.y1 = value
+        shape.y2 += dy
+      } else {
+        shape.y = value
+      }
+    } else {
+      shape[property] = value
+    }
+  })
+}
+
 onMounted(() => {
   window.addEventListener("keydown", handleKey)
   window.addEventListener("keyup", handleKeyUp)
@@ -586,25 +620,26 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div
-    ref="canvasRef"
-    class="relative w-full h-full overflow-hidden"
-    :style="{ cursor: ui.tool === 'select' ? 'default' : 'crosshair' }"
-    @mousedown="handleMouseDown"
-    @mousemove="handleMouseMove"
-    @mouseup="handleMouseUp"
-    @mouseleave="handleMouseUp"
-    @click="handleCanvasClick"
-  >
+  <div class="flex h-full">
     <div
-      class="absolute inset-0 pointer-events-none"
-      style="
-        background-size: 20px 20px;
-        background-image:
-          linear-gradient(to right, rgba(0, 0, 0, 0.03) 0.5px, transparent 0.5px),
-          linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 0.5px, transparent 0.5px);
-      "
-    />
+      ref="canvasRef"
+      class="relative flex-1 overflow-hidden"
+      :style="{ cursor: ui.tool === 'select' ? 'default' : 'crosshair' }"
+      @mousedown="handleMouseDown"
+      @mousemove="handleMouseMove"
+      @mouseup="handleMouseUp"
+      @mouseleave="handleMouseUp"
+      @click="handleCanvasClick"
+    >
+      <div
+        class="absolute inset-0 pointer-events-none"
+        style="
+          background-size: 20px 20px;
+          background-image:
+            linear-gradient(to right, rgba(0, 0, 0, 0.03) 0.5px, transparent 0.5px),
+            linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 0.5px, transparent 0.5px);
+        "
+      />
 
     <div
       v-for="guide in state.snapGuides"
@@ -689,8 +724,13 @@ onBeforeUnmount(() => {
       <div
         v-if="shape.type === 'text'"
         contenteditable
-        class="min-w-[80px] min-h-[30px] px-2 py-1 border border-border bg-white text-sm"
+        class="min-w-[80px] min-h-[30px] px-2 py-1 border border-border bg-white"
+        :style="{
+          fontSize: (shape.fontSize || 14) + 'px',
+          color: shape.color || '#000000'
+        }"
         :class="state.selectedIds.includes(shape.id) ? 'ring-1 ring-accent ring-offset-0' : ''"
+        @input="(e) => shape.text = e.target.innerText"
       >
         {{ shape.text }}
       </div>
@@ -736,12 +776,18 @@ onBeforeUnmount(() => {
       />
     </div>
 
+    <input
+      ref="fileInputRef"
+      type="file"
+      accept="image/*"
+      class="hidden"
+      @change="handleFileChange"
+    />
   </div>
-  <input
-    ref="fileInputRef"
-    type="file"
-    accept="image/*"
-    class="hidden"
-    @change="handleFileChange"
+
+  <StylePanel
+    :selectedShapes="selectedShapes"
+    @update="handleStyleUpdate"
   />
+</div>
 </template>
