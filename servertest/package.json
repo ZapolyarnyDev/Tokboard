@@ -1,0 +1,53 @@
+{
+  "name": "tokboard",
+  "version": "1.0.0",
+  "description": "Интерактивная доска задач",
+  "homepage": "https://github.com/ZapolyarnyDev/Tokboard#readme",
+  "bugs": {
+    "url": "https://github.com/ZapolyarnyDev/Tokboard/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZapolyarnyDev/Tokboard.git"
+  },
+  "license": "ISC",
+  "author": "Bodrov Daniil",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js",
+    "db:generate": "prisma generate",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:validate": "prisma validate",
+    "postinstall": "prisma generate",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.7.0",
+    "@prisma/client": "^7.7.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.1",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.20.0",
+    "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.6.0",
+    "eslint": "^10.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "jest": "^30.4.2",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.8.3",
+    "prettier-plugin-prisma": "^5.0.0",
+    "prisma": "^7.7.0",
+    "supertest": "^7.2.2"
+  }
+}
