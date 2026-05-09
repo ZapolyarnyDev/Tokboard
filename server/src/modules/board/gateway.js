@@ -1,6 +1,11 @@
 import { WebSocket } from 'ws'
+import {
+  validateCreateObjectPayload,
+  validateDeleteObjectPayload,
+  validateMoveObjectPayload,
+  validateUpdateObjectPayload,
+} from '../../utils/validation.js'
 import { verifyAccessToken } from '../auth/jwt.js'
-import { validateMovePayload } from '../../utils/validation.js'
 
 export class BoardGateway {
   constructor(boardService) {
@@ -31,6 +36,8 @@ export class BoardGateway {
 
   handleConnection(ws) {
     ws.user = null
+    ws.boardKey = null
+    ws.boardId = null
 
     ws.on('message', async (msg) => {
       let data
@@ -54,17 +61,50 @@ export class BoardGateway {
 
         case 'join-board':
           if (process.env.WS_REQUIRE_AUTH === 'true' && !ws.user) return
-          this.joinBoard(ws, data.boardId)
+          await this.joinBoard(ws, data.boardId)
+          break
+
+        case 'create-object':
+          if (process.env.WS_REQUIRE_AUTH === 'true' && !ws.user) return
+          if (!ws.boardKey) return
+
+          {
+            const userId = ws.user?.sub || 'anonymous'
+            if (!this.checkRateLimit(userId)) return
+            await this.handleCreate(ws, data)
+          }
+          break
+
+        case 'update-object':
+          if (process.env.WS_REQUIRE_AUTH === 'true' && !ws.user) return
+          if (!ws.boardKey) return
+
+          {
+            const userId = ws.user?.sub || 'anonymous'
+            if (!this.checkRateLimit(userId)) return
+            await this.handleUpdate(ws, data)
+          }
           break
 
         case 'move-object':
           if (process.env.WS_REQUIRE_AUTH === 'true' && !ws.user) return
-          if (!ws.boardId) return
+          if (!ws.boardKey) return
 
           const userId = ws.user?.sub || 'anonymous'
           if (!this.checkRateLimit(userId)) return
 
           await this.handleMove(ws, data)
+          break
+
+        case 'delete-object':
+          if (process.env.WS_REQUIRE_AUTH === 'true' && !ws.user) return
+          if (!ws.boardKey) return
+
+          {
+            const userId = ws.user?.sub || 'anonymous'
+            if (!this.checkRateLimit(userId)) return
+            await this.handleDelete(ws, data)
+          }
           break
       }
     })
@@ -72,32 +112,74 @@ export class BoardGateway {
     ws.on('close', () => this.disconnect(ws))
   }
 
-  joinBoard(ws, boardId) {
+  async joinBoard(ws, boardId) {
     if (!boardId) return
 
-    if (ws.boardId && ws.boardId !== boardId) {
-      this.boards.get(ws.boardId)?.delete(ws)
+    let resolved
+    try {
+      resolved = await this.boardService.ensureBoardFromJoin({
+        boardIdRaw: boardId,
+        userId: ws.user?.sub,
+      })
+    } catch (e) {
+      this.send(ws, {
+        type: 'error',
+        payload: {
+          message: e.message ?? 'Join failed',
+        },
+      })
+      return
     }
 
-    if (!this.boards.has(boardId)) {
-      this.boards.set(boardId, new Set())
+    if (ws.boardKey && ws.boardKey !== resolved.boardKey) {
+      this.boards.get(ws.boardKey)?.delete(ws)
     }
 
-    this.boards.get(boardId).add(ws)
-    ws.boardId = boardId
+    if (!this.boards.has(resolved.boardKey)) {
+      this.boards.set(resolved.boardKey, new Set())
+    }
+
+    this.boards.get(resolved.boardKey).add(ws)
+    ws.boardKey = resolved.boardKey
+    ws.boardId = resolved.boardId
+
+    try {
+      const objects = await this.boardService.listBoardObjects(ws.boardId)
+      this.send(ws, {
+        type: 'board-state',
+        payload: {
+          objects: objects.map((o) => this.boardService.toClientObject(o)),
+        },
+      })
+    } catch (e) {
+      this.send(ws, {
+        type: 'error',
+        payload: {
+          message: e.message ?? 'Failed to load board',
+        },
+      })
+    }
   }
 
   disconnect(ws) {
-    const boardId = ws.boardId
-    if (!boardId) return
+    const boardKey = ws.boardKey
+    if (!boardKey) return
 
-    const clients = this.boards.get(boardId)
+    const clients = this.boards.get(boardKey)
     clients?.delete(ws)
-    if (clients?.size === 0) this.boards.delete(boardId)
+    if (clients?.size === 0) {
+      this.boards.delete(boardKey)
+    }
   }
 
-  broadcast(boardId, event) {
-    const clients = this.boards.get(boardId)
+  send(ws, event) {
+    try {
+      ws.send(JSON.stringify(event))
+    } catch {}
+  }
+
+  broadcast(boardKey, event) {
+    const clients = this.boards.get(boardKey)
     if (!clients) return
 
     for (const client of clients) {
@@ -113,19 +195,79 @@ export class BoardGateway {
       }
     }
 
-    if (clients.size === 0) this.boards.delete(boardId)
+    if (clients.size === 0) this.boards.delete(boardKey)
+  }
+
+  async handleCreate(ws, data) {
+    if (!validateCreateObjectPayload(data.payload)) return
+
+    try {
+      const created = await this.boardService.createObject(
+        ws.boardId,
+        data.payload,
+      )
+      this.broadcast(ws.boardKey, { type: 'object-created', payload: created })
+    } catch (e) {
+      this.send(ws, {
+        type: 'error',
+        payload: { message: e.message ?? 'Create failed' },
+      })
+    }
+  }
+
+  async handleUpdate(ws, data) {
+    if (!validateUpdateObjectPayload(data.payload)) return
+    const objectId = data.payload?.id
+    if (!objectId) return
+
+    try {
+      const updated = await this.boardService.updateObject(
+        ws.boardId,
+        objectId,
+        data.payload,
+      )
+      this.broadcast(ws.boardKey, { type: 'object-updated', payload: updated })
+    } catch (e) {
+      this.send(ws, {
+        type: 'error',
+        payload: { message: e.message ?? 'Update failed' },
+      })
+    }
   }
 
   async handleMove(ws, data) {
-    if (!validateMovePayload(data.payload)) {
-      return
+    if (!validateMoveObjectPayload(data.payload)) return
+    const objectId = data.payload?.id
+    if (!objectId) return
+
+    try {
+      const moved = await this.boardService.moveObjectOnBoard(
+        ws.boardId,
+        objectId,
+        data.payload,
+      )
+      this.broadcast(ws.boardKey, { type: 'object-moved', payload: moved })
+    } catch (e) {
+      this.send(ws, {
+        type: 'error',
+        payload: { message: e.message ?? 'Move failed' },
+      })
     }
+  }
 
-    const updated = await this.boardService.moveObject(data.payload)
+  async handleDelete(ws, data) {
+    if (!validateDeleteObjectPayload(data.payload)) return
+    const objectId = data.payload?.id
+    if (!objectId) return
 
-    this.broadcast(ws.boardId, {
-      type: 'object-moved',
-      payload: updated,
-    })
+    try {
+      const deleted = await this.boardService.deleteObject(ws.boardId, objectId)
+      this.broadcast(ws.boardKey, { type: 'object-deleted', payload: deleted })
+    } catch (e) {
+      this.send(ws, {
+        type: 'error',
+        payload: { message: e.message ?? 'Delete failed' },
+      })
+    }
   }
 }
