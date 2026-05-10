@@ -1,5 +1,43 @@
 # Tokboard
 
+## Локальный запуск
+
+Требуется Node.js 24+ и Docker.
+
+1. Установить зависимости:
+
+```bash
+npm ci
+```
+
+2. Создать env для backend:
+
+```bash
+copy server\.env.example server\.env
+```
+
+3. Поднять PostgreSQL и применить миграции:
+
+```bash
+npm run db:up
+npm run db:migrate
+```
+
+4. Запустить backend:
+
+```bash
+npm run dev:server
+```
+
+5. Во втором терминале запустить frontend:
+
+```bash
+npm run dev:client
+```
+
+Приложение откроется на `http://localhost:5173`, backend работает на `http://localhost:3000`.
+Frontend по умолчанию использует `VITE_API_URL=http://localhost:3000` и `VITE_WS_URL=ws://localhost:3000`; при необходимости их можно задать в `client/.env`.
+
 Интерактивная доска для распределения задач в команде, разработанная на веб-сокетах.
 
 ## Состав команды

@@ -5,6 +5,11 @@
     "server"
   ],
   "scripts": {
+    "dev:client": "npm run dev --workspace client",
+    "dev:server": "npm run dev --workspace server",
+    "db:up": "docker compose --env-file server/.env -f server/docker-compose.yml up -d",
+    "db:down": "docker compose --env-file server/.env -f server/docker-compose.yml down",
+    "db:migrate": "npm run db:migrate:dev --workspace server",
     "test": "npm test --workspaces",
     "test:coverage": "npm run test:coverage --workspaces --if-present",
     "test:integration": "npm run test:integration --workspace server"
