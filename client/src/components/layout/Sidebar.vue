@@ -25,7 +25,7 @@ const handleCreate = async () => {
   error.value = ""
   isLoading.value = true
   try {
-    const result = await createBoard(title.value || "New board", auth.accessToken)
+    const result = await createBoard(title.value || "Новая доска", auth.accessToken)
     ui.addBoard(result.board)
     title.value = ""
   } catch (e) {
@@ -63,10 +63,10 @@ onMounted(loadBoards)
     <div class="flex h-16 items-center justify-between border-b border-border px-4">
       <div class="sidebar-content min-w-0">
         <UiTypography.Title as="h2" size="h4" truncate>
-          Boards
+          Доски
         </UiTypography.Title>
         <UiTypography.Muted class="mt-1" size="md" truncate>
-          Create or join a board
+          Создайте доску или подключитесь по ID
         </UiTypography.Muted>
       </div>
 
@@ -83,23 +83,23 @@ onMounted(loadBoards)
     <div class="flex-1 overflow-y-auto p-3">
       <div class="sidebar-content space-y-3">
         <form class="space-y-2 border border-border bg-bg-secondary p-3" @submit.prevent="handleCreate">
-          <UiTypography.Title as="h3" size="h4" class="text-sm">Create board</UiTypography.Title>
-          <UiInput v-model="title" placeholder="Board title" />
+          <UiTypography.Title as="h3" size="h4" class="text-sm">Создать доску</UiTypography.Title>
+          <UiInput v-model="title" placeholder="Название доски" />
           <UiButton type="submit" class="w-full" :disabled="isLoading">
             <span class="flex items-center justify-center gap-2">
               <Plus :size="16" />
-              Create
+              Создать
             </span>
           </UiButton>
         </form>
 
         <form class="space-y-2 border border-border bg-bg-secondary p-3" @submit.prevent="handleJoin">
-          <UiTypography.Title as="h3" size="h4" class="text-sm">Join board</UiTypography.Title>
-          <UiInput v-model="joinId" placeholder="Board ID" />
+          <UiTypography.Title as="h3" size="h4" class="text-sm">Присоединиться к доске</UiTypography.Title>
+          <UiInput v-model="joinId" placeholder="ID доски" />
           <UiButton type="submit" variant="secondary" class="w-full" :disabled="isLoading">
             <span class="flex items-center justify-center gap-2">
               <Users :size="16" />
-              Join
+              Войти
             </span>
           </UiButton>
         </form>
@@ -107,7 +107,7 @@ onMounted(loadBoards)
         <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
       </div>
 
-      <nav class="mt-3 space-y-2" aria-label="Boards">
+      <nav class="mt-3 space-y-2" aria-label="Доски">
         <button
           v-for="board in ui.boards"
           :key="board.id"
@@ -141,7 +141,7 @@ onMounted(loadBoards)
       <button type="button" class="sidebar-action group w-full justify-between px-3" @click="ui.leaveBoard">
         <span class="flex items-center gap-2">
           <LogOut :size="16" :stroke-width="2" />
-          <span class="sidebar-content">Leave board</span>
+          <span class="sidebar-content">Выйти из доски</span>
         </span>
       </button>
     </div>

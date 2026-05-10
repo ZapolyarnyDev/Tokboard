@@ -49,13 +49,13 @@ router.post('/register', authLimiter, async (req, res) => {
   const { email, name, password } = req.body ?? {}
 
   if (!validateEmail(email)) {
-    return res.status(400).json({ message: 'Invalid email format' })
+    return res.status(400).json({ message: 'Некорректный формат email' })
   }
   if (!validateName(name)) {
-    return res.status(400).json({ message: 'Invalid name' })
+    return res.status(400).json({ message: 'Некорректное имя' })
   }
   if (!validatePassword(password)) {
-    return res.status(400).json({ message: 'Password must be 8-128 characters' })
+    return res.status(400).json({ message: 'Пароль должен быть от 8 до 128 символов' })
   }
 
   try {
@@ -67,7 +67,7 @@ router.post('/register', authLimiter, async (req, res) => {
   } catch (e) {
     return res
       .status(e.statusCode ?? 500)
-      .json({ message: e.message ?? 'Internal error' })
+      .json({ message: e.message ?? 'Внутренняя ошибка' })
   }
 })
 
@@ -75,10 +75,10 @@ router.post('/login', authLimiter, async (req, res) => {
   const { email, password } = req.body ?? {}
 
   if (!validateEmail(email)) {
-    return res.status(400).json({ message: 'Invalid email format' })
+    return res.status(400).json({ message: 'Некорректный формат email' })
   }
   if (!validatePassword(password)) {
-    return res.status(400).json({ message: 'Invalid password' })
+    return res.status(400).json({ message: 'Некорректный пароль' })
   }
 
   try {
@@ -90,14 +90,14 @@ router.post('/login', authLimiter, async (req, res) => {
   } catch (e) {
     return res
       .status(e.statusCode ?? 500)
-      .json({ message: e.message ?? 'Internal error' })
+      .json({ message: e.message ?? 'Внутренняя ошибка' })
   }
 })
 
 router.post('/refresh', generalAuthLimiter, async (req, res) => {
   const refreshToken = req.cookies?.[REFRESH_COOKIE] ?? req.body?.refreshToken
   if (!refreshToken) {
-    return res.status(401).json({ message: 'Missing refresh token' })
+    return res.status(401).json({ message: 'Не передан refresh-токен' })
   }
 
   try {
@@ -110,7 +110,7 @@ router.post('/refresh', generalAuthLimiter, async (req, res) => {
     clearRefreshCookie(res)
     return res
       .status(e.statusCode ?? 500)
-      .json({ message: e.message ?? 'Internal error' })
+      .json({ message: e.message ?? 'Внутренняя ошибка' })
   }
 })
 

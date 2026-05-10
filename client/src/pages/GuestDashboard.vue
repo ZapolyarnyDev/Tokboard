@@ -20,7 +20,7 @@ const capabilities = [
 
 const handleSubmit = async () => {
   const normalizedEmail = email.value.trim()
-  const normalizedName = name.value.trim() || normalizedEmail.split("@")[0] || "User"
+  const normalizedName = name.value.trim() || normalizedEmail.split("@")[0] || "Пользователь"
 
   if (mode.value === "register") {
     await auth.register({
@@ -70,7 +70,7 @@ const handleSubmit = async () => {
               v-model="name"
               class="md:col-span-3"
               type="text"
-              placeholder="Name"
+              placeholder="Имя"
             />
             <UiInput v-model="email" type="email" placeholder="student@mail.ru" />
             <UiInput v-model="password" type="password" placeholder="Пароль" />
@@ -82,7 +82,7 @@ const handleSubmit = async () => {
               class="text-left text-sm text-accent md:col-span-3"
               @click="mode = mode === 'login' ? 'register' : 'login'"
             >
-              {{ mode === "login" ? "Create account" : "Back to login" }}
+              {{ mode === "login" ? "Создать аккаунт" : "Вернуться ко входу" }}
             </button>
             <p v-if="auth.error" class="text-sm text-red-600 md:col-span-3">
               {{ auth.error }}
@@ -96,7 +96,7 @@ const handleSubmit = async () => {
           <div class="flex h-12 items-center justify-between border-b border-border px-4">
             <div class="flex items-center gap-2">
               <span class="h-3 w-3 border border-accent bg-accent-light" />
-              <UiTypography.Code as="span" class="uppercase" size="sm" tone="muted">Live Canvas</UiTypography.Code>
+              <UiTypography.Code as="span" class="uppercase" size="sm" tone="muted">Онлайн-доска</UiTypography.Code>
             </div>
             <UiTypography.Muted as="div" class="flex items-center gap-2" size="sm">
               <MousePointer2 :size="14" />
@@ -106,7 +106,7 @@ const handleSubmit = async () => {
 
           <div class="relative h-[calc(100%-3rem)] overflow-hidden bg-[linear-gradient(var(--color-border-default)_1px,transparent_1px),linear-gradient(90deg,var(--color-border-default)_1px,transparent_1px)] bg-[size:48px_48px]">
             <div class="canvas-object object-text">
-              <UiTypography.Code as="span" size="sm" tone="muted">TEXT</UiTypography.Code>
+              <UiTypography.Code as="span" size="sm" tone="muted">ТЕКСТ</UiTypography.Code>
               <UiTypography.Text class="mt-2" size="md">Согласовать макет</UiTypography.Text>
             </div>
 

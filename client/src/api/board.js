@@ -14,7 +14,7 @@ async function request(path, accessToken, options = {}) {
   })
 
   const body = res.status === 204 ? null : await res.json().catch(() => null)
-  if (!res.ok) throw new Error(body?.message || 'Board request failed')
+  if (!res.ok) throw new Error(body?.message || 'Ошибка запроса к доске')
   return body
 }
 
@@ -50,6 +50,6 @@ export async function uploadBoardImage(dataUrl, accessToken) {
   })
 
   const body = await res.json().catch(() => null)
-  if (!res.ok) throw new Error(body?.message || 'Image upload failed')
+  if (!res.ok) throw new Error(body?.message || 'Не удалось загрузить изображение')
   return body
 }

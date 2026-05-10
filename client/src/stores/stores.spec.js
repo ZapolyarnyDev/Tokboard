@@ -43,7 +43,7 @@ describe('Pinia stores', () => {
   it('updates board UI state', () => {
     const ui = useUiStore()
 
-    expect(ui.activeBoard).toBe('No board')
+    expect(ui.activeBoard).toBe('Доска не выбрана')
     expect(ui.activeBoardId).toBeNull()
 
     ui.setBoard({ id: 7, title: 'Project Alpha' })

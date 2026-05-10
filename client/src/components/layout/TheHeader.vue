@@ -49,7 +49,7 @@ const logout = () => {
             Tokboard
           </p>
           <p class="mt-1 truncate text-xs text-text-muted">
-            Collaborative Canvas
+            Совместная доска
           </p>
         </div>
       </div>
@@ -135,7 +135,7 @@ const logout = () => {
                   Меню
                 </span>
                 <span class="font-heading text-xs text-text-muted transition-colors duration-150 group-hover:text-text-primary">
-                  WORKSPACE
+                  РАБОЧАЯ ОБЛАСТЬ
                 </span>
               </button>
               <button
@@ -149,7 +149,7 @@ const logout = () => {
                   Выйти
                 </span>
                 <span class="font-heading text-xs text-text-muted transition-colors duration-150 group-hover:text-text-primary">
-                  EXIT
+                  ВЫХОД
                 </span>
               </button>
             </div>

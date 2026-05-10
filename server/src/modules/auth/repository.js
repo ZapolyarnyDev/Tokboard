@@ -45,7 +45,7 @@ export class AuthRepository {
       })
 
       if (!record || record.revokedAt) {
-        return { success: false, error: 'Refresh token revoked' }
+        return { success: false, error: 'Refresh-токен отозван' }
       }
 
       if (record.expiresAt.getTime() <= Date.now()) {
@@ -53,7 +53,7 @@ export class AuthRepository {
           where: { id: record.id },
           data: { revokedAt: new Date() },
         })
-        return { success: false, error: 'Refresh token expired' }
+        return { success: false, error: 'Refresh-токен истек' }
       }
 
       const user = await tx.user.findUnique({
@@ -65,7 +65,7 @@ export class AuthRepository {
           where: { id: record.id },
           data: { revokedAt: new Date() },
         })
-        return { success: false, error: 'Invalid refresh token' }
+        return { success: false, error: 'Некорректный refresh-токен' }
       }
 
       await tx.refreshToken.update({

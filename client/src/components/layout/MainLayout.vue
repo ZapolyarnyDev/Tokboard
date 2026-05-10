@@ -21,8 +21,8 @@ const ui = useUiStore()
         </div>
         <div v-else class="grid h-full place-items-center border border-border bg-white">
           <div class="text-center">
-            <h2 class="font-heading text-xl font-semibold text-text-primary">Create or join a board</h2>
-            <p class="mt-2 text-sm text-text-secondary">Use the left menu to start working.</p>
+            <h2 class="font-heading text-xl font-semibold text-text-primary">Создайте доску или подключитесь</h2>
+            <p class="mt-2 text-sm text-text-secondary">Используйте меню слева, чтобы начать работу.</p>
           </div>
         </div>
       </main>

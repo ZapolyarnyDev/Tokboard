@@ -5,13 +5,13 @@ export function requireAuth(req, res, next) {
   const token = header?.startsWith('Bearer ')
     ? header.slice('Bearer '.length)
     : null
-  if (!token) return res.status(401).json({ message: 'Missing access token' })
+  if (!token) return res.status(401).json({ message: 'Не передан access-токен' })
 
   try {
     const payload = verifyAccessToken(token)
     req.user = payload
     return next()
   } catch {
-    return res.status(401).json({ message: 'Invalid access token' })
+    return res.status(401).json({ message: 'Некорректный access-токен' })
   }
 }

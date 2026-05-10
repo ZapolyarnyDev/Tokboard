@@ -4,7 +4,7 @@ export const useUiStore = defineStore("ui", {
   state: () => ({
     boards: [],
     activeBoardId: null,
-    activeBoard: "No board",
+    activeBoard: "Доска не выбрана",
     tool: "select",
     isSidebarCollapsed: false,
     collapsedProjects: {}
@@ -20,7 +20,7 @@ export const useUiStore = defineStore("ui", {
 
     setBoard(board) {
       this.activeBoardId = board.id
-      this.activeBoard = board.title || `Board ${board.id}`
+      this.activeBoard = board.title || `Доска ${board.id}`
       if (!this.boards.some((item) => item.id === board.id)) {
         this.boards = [board, ...this.boards]
       }
@@ -33,7 +33,7 @@ export const useUiStore = defineStore("ui", {
 
     leaveBoard() {
       this.activeBoardId = null
-      this.activeBoard = "No board"
+      this.activeBoard = "Доска не выбрана"
     },
 
     setTool(tool) {

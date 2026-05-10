@@ -13,7 +13,7 @@ async function request(path, options = {}) {
   const body = res.status === 204 ? null : await res.json().catch(() => null)
 
   if (!res.ok) {
-    const error = new Error(body?.message || 'Request failed')
+    const error = new Error(body?.message || 'Ошибка запроса')
     error.status = res.status
     throw error
   }
