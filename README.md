@@ -4,6 +4,23 @@
 
 Требуется Node.js 24+ и Docker.
 
+### Вариант 1: полностью через Docker
+
+```bash
+copy server\.env.example server\.env
+npm run docker:up
+```
+
+Frontend будет доступен на `http://localhost:8080`, backend - на `http://localhost:3000`.
+
+Остановить контейнеры:
+
+```bash
+npm run docker:down
+```
+
+### Вариант 2: dev-режим
+
 1. Установить зависимости:
 
 ```bash
