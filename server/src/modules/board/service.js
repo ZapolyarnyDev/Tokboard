@@ -3,6 +3,40 @@ export class BoardService {
     this.repo = boardRepository
   }
 
+  finite(v) {
+    return typeof v === 'number' && Number.isFinite(v)
+  }
+
+  stringOrNull(v) {
+    return typeof v === 'string' ? v : null
+  }
+
+  pickNumber(payload, key, fallback) {
+    return this.finite(payload?.[key]) ? payload[key] : fallback
+  }
+
+  normalizeLinePoints(payload, base) {
+    const points =
+      payload.points && typeof payload.points === 'object' && !Array.isArray(payload.points)
+        ? payload.points
+        : {}
+
+    const x1 = this.pickNumber(payload, 'x1', this.pickNumber(points, 'x1', base.x))
+    const y1 = this.pickNumber(payload, 'y1', this.pickNumber(points, 'y1', base.y))
+    const x2 = this.pickNumber(
+      payload,
+      'x2',
+      this.pickNumber(points, 'x2', base.x + (base.width ?? 0)),
+    )
+    const y2 = this.pickNumber(
+      payload,
+      'y2',
+      this.pickNumber(points, 'y2', base.y + (base.height ?? 0)),
+    )
+
+    return { x1, y1, x2, y2 }
+  }
+
   async listBoardObjects(boardId) {
     const board = await this.repo.findBoardById(boardId)
     if (!board) {
@@ -62,26 +96,39 @@ export class BoardService {
       throw err
     }
 
-    const finite = (v) => typeof v === 'number' && Number.isFinite(v)
-    const str = (v) => (typeof v === 'string' ? v : null)
-
     const base = {
-      x: finite(payload.x) ? payload.x : 0,
-      y: finite(payload.y) ? payload.y : 0,
-      width: finite(payload.width) ? payload.width : undefined,
-      height: finite(payload.height) ? payload.height : undefined,
-      rotation: finite(payload.rotation) ? payload.rotation : 0,
+      x: this.finite(payload.x) ? payload.x : 0,
+      y: this.finite(payload.y) ? payload.y : 0,
+      width: this.finite(payload.width) ? payload.width : undefined,
+      height: this.finite(payload.height) ? payload.height : undefined,
+      rotation: this.finite(payload.rotation) ? payload.rotation : 0,
     }
 
     const t = payload.type
 
     if (t === 'TEXT' || t === 'IMAGE' || t === 'SHAPE') {
+      const shapeData = payload.shapeData
+        ? {
+            ...payload.shapeData,
+            points:
+              payload.shapeData.kind === 'LINE'
+                ? this.normalizeLinePoints(
+                    {
+                      ...payload,
+                      points: payload.shapeData.points,
+                    },
+                    base,
+                  )
+                : payload.shapeData.points,
+          }
+        : undefined
+
       return {
         type: t,
         ...base,
         textData: payload.textData ?? undefined,
         imageData: payload.imageData ?? undefined,
-        shapeData: payload.shapeData ?? undefined,
+        shapeData,
       }
     }
 
@@ -90,9 +137,12 @@ export class BoardService {
         type: 'TEXT',
         ...base,
         textData: {
-          text: str(payload.text) ?? '',
-          fontSize: finite(payload.fontSize) ? payload.fontSize : undefined,
-          fontColor: str(payload.color) ?? str(payload.fontColor) ?? undefined,
+          text: this.stringOrNull(payload.text) ?? '',
+          fontSize: this.finite(payload.fontSize) ? payload.fontSize : undefined,
+          fontColor:
+            this.stringOrNull(payload.color) ??
+            this.stringOrNull(payload.fontColor) ??
+            undefined,
         },
       }
     }
@@ -102,7 +152,10 @@ export class BoardService {
         type: 'IMAGE',
         ...base,
         imageData: {
-          imageUrl: str(payload.src) ?? str(payload.imageUrl) ?? '',
+          imageUrl:
+            this.stringOrNull(payload.src) ??
+            this.stringOrNull(payload.imageUrl) ??
+            '',
         },
       }
     }
@@ -116,15 +169,37 @@ export class BoardService {
     }
 
     if (typeof t === 'string' && shapeKindMap[t]) {
+      const kind = shapeKindMap[t]
+      const points =
+        kind === 'LINE' ? this.normalizeLinePoints(payload, base) : payload.points ?? undefined
+      const objectBase =
+        kind === 'LINE'
+          ? {
+              ...base,
+              x: Math.min(points.x1, points.x2),
+              y: Math.min(points.y1, points.y2),
+              width: Math.abs(points.x2 - points.x1),
+              height: Math.abs(points.y2 - points.y1),
+            }
+          : base
+
       return {
         type: 'SHAPE',
-        ...base,
+        ...objectBase,
         shapeData: {
-          kind: shapeKindMap[t],
-          strokeColor: str(payload.stroke) ?? str(payload.strokeColor) ?? undefined,
-          fillColor: str(payload.fill) ?? str(payload.fillColor) ?? undefined,
-          strokeWidth: finite(payload.strokeWidth) ? payload.strokeWidth : undefined,
-          points: payload.points ?? undefined,
+          kind,
+          strokeColor:
+            this.stringOrNull(payload.stroke) ??
+            this.stringOrNull(payload.strokeColor) ??
+            undefined,
+          fillColor:
+            this.stringOrNull(payload.fill) ??
+            this.stringOrNull(payload.fillColor) ??
+            undefined,
+          strokeWidth: this.finite(payload.strokeWidth)
+            ? payload.strokeWidth
+            : undefined,
+          points,
         },
       }
     }
@@ -173,7 +248,7 @@ export class BoardService {
       POLYGON: 'polygon',
     }
 
-    return {
+    const base = {
       id: record.id,
       type: kindToType[record.shapeData?.kind] ?? 'shape',
       x: record.x,
@@ -185,6 +260,21 @@ export class BoardService {
       fill: record.shapeData?.fillColor ?? undefined,
       strokeWidth: record.shapeData?.strokeWidth ?? undefined,
       points: record.shapeData?.points ?? undefined,
+    }
+
+    if (record.shapeData?.kind !== 'LINE') return base
+
+    const points =
+      record.shapeData?.points && typeof record.shapeData.points === 'object'
+        ? record.shapeData.points
+        : {}
+
+    return {
+      ...base,
+      x1: this.finite(points.x1) ? points.x1 : record.x,
+      y1: this.finite(points.y1) ? points.y1 : record.y,
+      x2: this.finite(points.x2) ? points.x2 : record.x + (record.width ?? 0),
+      y2: this.finite(points.y2) ? points.y2 : record.y + (record.height ?? 0),
     }
   }
 
@@ -250,6 +340,55 @@ export class BoardService {
     const finite = (v) => typeof v === 'number' && Number.isFinite(v)
     const x = finite(payload.x) ? payload.x : existing.x
     const y = finite(payload.y) ? payload.y : existing.y
+    const dx = x - existing.x
+    const dy = y - existing.y
+    const shapeData = existing.shapeData
+      ? {
+          kind: existing.shapeData.kind,
+          strokeColor: existing.shapeData.strokeColor,
+          fillColor: existing.shapeData.fillColor,
+          strokeWidth: existing.shapeData.strokeWidth,
+          points:
+            existing.shapeData.kind === 'LINE'
+              ? this.normalizeLinePoints(
+                  {
+                    points: existing.shapeData.points,
+                    x1:
+                      finite(payload.x1) && !finite(payload.x)
+                        ? payload.x1
+                        : undefined,
+                    y1:
+                      finite(payload.y1) && !finite(payload.y)
+                        ? payload.y1
+                        : undefined,
+                    x2:
+                      finite(payload.x2) && !finite(payload.x)
+                        ? payload.x2
+                        : undefined,
+                    y2:
+                      finite(payload.y2) && !finite(payload.y)
+                        ? payload.y2
+                        : undefined,
+                  },
+                  {
+                    x: existing.x,
+                    y: existing.y,
+                    width: existing.width,
+                    height: existing.height,
+                  },
+                )
+              : existing.shapeData.points,
+        }
+      : undefined
+
+    if (shapeData?.kind === 'LINE' && (finite(payload.x) || finite(payload.y))) {
+      shapeData.points = {
+        x1: shapeData.points.x1 + dx,
+        y1: shapeData.points.y1 + dy,
+        x2: shapeData.points.x2 + dx,
+        y2: shapeData.points.y2 + dy,
+      }
+    }
 
     const updated = await this.repo.updateObject(objectId, {
       x,
@@ -269,15 +408,7 @@ export class BoardService {
             imageUrl: existing.imageData.imageUrl,
           }
         : undefined,
-      shapeData: existing.shapeData
-        ? {
-            kind: existing.shapeData.kind,
-            strokeColor: existing.shapeData.strokeColor,
-            fillColor: existing.shapeData.fillColor,
-            strokeWidth: existing.shapeData.strokeWidth,
-            points: existing.shapeData.points,
-          }
-        : undefined,
+      shapeData,
     })
 
     return this.toClientObject(updated)

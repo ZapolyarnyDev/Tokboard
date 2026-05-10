@@ -51,6 +51,13 @@ function isFiniteNumberOrUndefined(v) {
   return v === undefined || (typeof v === 'number' && Number.isFinite(v))
 }
 
+function isStringOrUndefined(v, maxLen) {
+  if (v === undefined) return true
+  if (typeof v !== 'string') return false
+  if (maxLen && v.length > maxLen) return false
+  return true
+}
+
 function isNonEmptyStringOrUndefined(v, maxLen) {
   if (v === undefined) return true
   if (typeof v !== 'string') return false
@@ -64,13 +71,21 @@ export function validateCreateObjectPayload(payload) {
 
   if (!isFiniteNumberOrUndefined(payload.x)) return false
   if (!isFiniteNumberOrUndefined(payload.y)) return false
+  if (!isFiniteNumberOrUndefined(payload.x1)) return false
+  if (!isFiniteNumberOrUndefined(payload.y1)) return false
+  if (!isFiniteNumberOrUndefined(payload.x2)) return false
+  if (!isFiniteNumberOrUndefined(payload.y2)) return false
   if (!isFiniteNumberOrUndefined(payload.width)) return false
   if (!isFiniteNumberOrUndefined(payload.height)) return false
   if (!isFiniteNumberOrUndefined(payload.rotation)) return false
+  if (!isFiniteNumberOrUndefined(payload.fontSize)) return false
+  if (!isFiniteNumberOrUndefined(payload.strokeWidth)) return false
 
   if (!isNonEmptyStringOrUndefined(payload.type, 32)) return false
   if (!isNonEmptyStringOrUndefined(payload.stroke, 64)) return false
+  if (!isNonEmptyStringOrUndefined(payload.strokeColor, 64)) return false
   if (!isNonEmptyStringOrUndefined(payload.fill, 64)) return false
+  if (!isNonEmptyStringOrUndefined(payload.fillColor, 64)) return false
   if (!isNonEmptyStringOrUndefined(payload.color, 64)) return false
   if (!isNonEmptyStringOrUndefined(payload.fontColor, 64)) return false
 
@@ -79,6 +94,25 @@ export function validateCreateObjectPayload(payload) {
 
   if (!isNonEmptyStringOrUndefined(payload.src, 2_000_000)) return false
   if (!isNonEmptyStringOrUndefined(payload.imageUrl, 2_000_000)) return false
+
+  if (
+    payload.textData !== undefined &&
+    (!payload.textData || typeof payload.textData !== 'object')
+  ) {
+    return false
+  }
+  if (
+    payload.imageData !== undefined &&
+    (!payload.imageData || typeof payload.imageData !== 'object')
+  ) {
+    return false
+  }
+  if (
+    payload.shapeData !== undefined &&
+    (!payload.shapeData || typeof payload.shapeData !== 'object')
+  ) {
+    return false
+  }
 
   if (payload.points !== undefined) {
     const ok =
@@ -96,9 +130,52 @@ export function validateUpdateObjectPayload(payload) {
 
   if (!isFiniteNumberOrUndefined(payload.x)) return false
   if (!isFiniteNumberOrUndefined(payload.y)) return false
+  if (!isFiniteNumberOrUndefined(payload.x1)) return false
+  if (!isFiniteNumberOrUndefined(payload.y1)) return false
+  if (!isFiniteNumberOrUndefined(payload.x2)) return false
+  if (!isFiniteNumberOrUndefined(payload.y2)) return false
   if (!isFiniteNumberOrUndefined(payload.width)) return false
   if (!isFiniteNumberOrUndefined(payload.height)) return false
   if (!isFiniteNumberOrUndefined(payload.rotation)) return false
+  if (!isFiniteNumberOrUndefined(payload.fontSize)) return false
+  if (!isFiniteNumberOrUndefined(payload.strokeWidth)) return false
+  if (!isNonEmptyStringOrUndefined(payload.type, 32)) return false
+  if (!isStringOrUndefined(payload.text, 20_000)) return false
+  if (!isNonEmptyStringOrUndefined(payload.stroke, 64)) return false
+  if (!isNonEmptyStringOrUndefined(payload.strokeColor, 64)) return false
+  if (!isNonEmptyStringOrUndefined(payload.fill, 64)) return false
+  if (!isNonEmptyStringOrUndefined(payload.fillColor, 64)) return false
+  if (!isNonEmptyStringOrUndefined(payload.color, 64)) return false
+  if (!isNonEmptyStringOrUndefined(payload.fontColor, 64)) return false
+  if (!isNonEmptyStringOrUndefined(payload.src, 2_000_000)) return false
+  if (!isNonEmptyStringOrUndefined(payload.imageUrl, 2_000_000)) return false
+
+  if (payload.points !== undefined) {
+    const ok =
+      Array.isArray(payload.points) ||
+      (payload.points && typeof payload.points === 'object')
+    if (!ok) return false
+  }
+
+  if (
+    payload.textData !== undefined &&
+    (!payload.textData || typeof payload.textData !== 'object')
+  ) {
+    return false
+  }
+  if (
+    payload.imageData !== undefined &&
+    (!payload.imageData || typeof payload.imageData !== 'object')
+  ) {
+    return false
+  }
+  if (
+    payload.shapeData !== undefined &&
+    (!payload.shapeData || typeof payload.shapeData !== 'object')
+  ) {
+    return false
+  }
+
   return true
 }
 
