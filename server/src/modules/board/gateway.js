@@ -1,4 +1,5 @@
 import { WebSocket } from 'ws'
+
 import {
   validateCreateObjectPayload,
   validateDeleteObjectPayload,
@@ -10,8 +11,8 @@ import { verifyAccessToken } from '../auth/jwt.js'
 export class BoardGateway {
   constructor(boardService) {
     this.boardService = boardService
-    this.boards = new Map()
-    this.rateLimits = new Map()
+    this.boards = new Map() // boardKey -> Set<WebSocket>
+    this.rateLimits = new Map() // userId -> {count, resetAt}
   }
 
   checkRateLimit(userId) {
@@ -59,34 +60,35 @@ export class BoardGateway {
           break
         }
 
-        case 'join-board':
+        case 'join-board': {
           if (process.env.WS_REQUIRE_AUTH === 'true' && !ws.user) return
           await this.joinBoard(ws, data.boardId)
           break
+        }
 
-        case 'create-object':
+        case 'create-object': {
           if (process.env.WS_REQUIRE_AUTH === 'true' && !ws.user) return
           if (!ws.boardKey) return
 
-          {
-            const userId = ws.user?.sub || 'anonymous'
-            if (!this.checkRateLimit(userId)) return
-            await this.handleCreate(ws, data)
-          }
-          break
+          const userId = ws.user?.sub || 'anonymous'
+          if (!this.checkRateLimit(userId)) return
 
-        case 'update-object':
+          await this.handleCreate(ws, data)
+          break
+        }
+
+        case 'update-object': {
           if (process.env.WS_REQUIRE_AUTH === 'true' && !ws.user) return
           if (!ws.boardKey) return
 
-          {
-            const userId = ws.user?.sub || 'anonymous'
-            if (!this.checkRateLimit(userId)) return
-            await this.handleUpdate(ws, data)
-          }
-          break
+          const userId = ws.user?.sub || 'anonymous'
+          if (!this.checkRateLimit(userId)) return
 
-        case 'move-object':
+          await this.handleUpdate(ws, data)
+          break
+        }
+
+        case 'move-object': {
           if (process.env.WS_REQUIRE_AUTH === 'true' && !ws.user) return
           if (!ws.boardKey) return
 
@@ -95,17 +97,18 @@ export class BoardGateway {
 
           await this.handleMove(ws, data)
           break
+        }
 
-        case 'delete-object':
+        case 'delete-object': {
           if (process.env.WS_REQUIRE_AUTH === 'true' && !ws.user) return
           if (!ws.boardKey) return
 
-          {
-            const userId = ws.user?.sub || 'anonymous'
-            if (!this.checkRateLimit(userId)) return
-            await this.handleDelete(ws, data)
-          }
+          const userId = ws.user?.sub || 'anonymous'
+          if (!this.checkRateLimit(userId)) return
+
+          await this.handleDelete(ws, data)
           break
+        }
       }
     })
 
@@ -167,15 +170,15 @@ export class BoardGateway {
 
     const clients = this.boards.get(boardKey)
     clients?.delete(ws)
-    if (clients?.size === 0) {
-      this.boards.delete(boardKey)
-    }
+    if (clients?.size === 0) this.boards.delete(boardKey)
   }
 
   send(ws, event) {
     try {
       ws.send(JSON.stringify(event))
-    } catch {}
+    } catch {
+      // ignore
+    }
   }
 
   broadcast(boardKey, event) {
@@ -202,10 +205,7 @@ export class BoardGateway {
     if (!validateCreateObjectPayload(data.payload)) return
 
     try {
-      const created = await this.boardService.createObject(
-        ws.boardId,
-        data.payload,
-      )
+      const created = await this.boardService.createObject(ws.boardId, data.payload)
       this.broadcast(ws.boardKey, { type: 'object-created', payload: created })
     } catch (e) {
       this.send(ws, {

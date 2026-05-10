@@ -20,7 +20,7 @@ export class BoardRepository {
     })
   }
 
-  async findObjectById(id) {
+  findObjectById(id) {
     return prisma.boardObject.findUnique({
       where: { id },
       include: {
@@ -151,19 +151,19 @@ export class BoardRepository {
     })
   }
 
-  deleteObject(id) {
-    return prisma.boardObject.delete({
-      where: { id },
-    })
-  }
-
-  async updatePosition(id, data) {
+  updatePosition(id, data) {
     return prisma.boardObject.update({
       where: { id },
       data: {
         x: data.x,
         y: data.y,
       },
+    })
+  }
+
+  deleteObject(id) {
+    return prisma.boardObject.delete({
+      where: { id },
     })
   }
 }

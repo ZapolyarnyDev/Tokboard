@@ -14,6 +14,7 @@ export function validateName(name) {
   return name.trim().length >= 1 && name.length <= 100
 }
 
+// Legacy payload validation for move-only message.
 export function validateMovePayload(payload) {
   if (!payload || typeof payload !== 'object') return false
 

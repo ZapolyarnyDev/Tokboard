@@ -51,6 +51,7 @@ export class BoardService {
       title,
       ownerId: Number(userId),
     })
+
     return { boardId: created.id, boardKey: String(created.id) }
   }
 
@@ -120,12 +121,9 @@ export class BoardService {
         ...base,
         shapeData: {
           kind: shapeKindMap[t],
-          strokeColor:
-            str(payload.stroke) ?? str(payload.strokeColor) ?? undefined,
+          strokeColor: str(payload.stroke) ?? str(payload.strokeColor) ?? undefined,
           fillColor: str(payload.fill) ?? str(payload.fillColor) ?? undefined,
-          strokeWidth: finite(payload.strokeWidth)
-            ? payload.strokeWidth
-            : undefined,
+          strokeWidth: finite(payload.strokeWidth) ? payload.strokeWidth : undefined,
           points: payload.points ?? undefined,
         },
       }
@@ -229,6 +227,7 @@ export class BoardService {
     return this.toClientObject(updated)
   }
 
+  // Legacy API used by older gateway code; kept for compatibility.
   async moveObject(payload) {
     const exists = await this.repo.findObjectById(payload.id)
     if (!exists) {
