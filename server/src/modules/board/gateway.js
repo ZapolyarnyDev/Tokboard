@@ -201,12 +201,19 @@ export class BoardGateway {
     if (clients.size === 0) this.boards.delete(boardKey)
   }
 
+  broadcastBoardObjectEvent(boardKey, type, payload) {
+    this.broadcast(boardKey, {
+      type,
+      payload,
+    })
+  }
+
   async handleCreate(ws, data) {
     if (!validateCreateObjectPayload(data.payload)) return
 
     try {
       const created = await this.boardService.createObject(ws.boardId, data.payload)
-      this.broadcast(ws.boardKey, { type: 'object-created', payload: created })
+      this.broadcastBoardObjectEvent(ws.boardKey, 'create-object', created)
     } catch (e) {
       this.send(ws, {
         type: 'error',
@@ -226,7 +233,7 @@ export class BoardGateway {
         objectId,
         data.payload,
       )
-      this.broadcast(ws.boardKey, { type: 'object-updated', payload: updated })
+      this.broadcastBoardObjectEvent(ws.boardKey, 'update-object', updated)
     } catch (e) {
       this.send(ws, {
         type: 'error',
@@ -246,7 +253,7 @@ export class BoardGateway {
         objectId,
         data.payload,
       )
-      this.broadcast(ws.boardKey, { type: 'object-moved', payload: moved })
+      this.broadcastBoardObjectEvent(ws.boardKey, 'move-object', moved)
     } catch (e) {
       this.send(ws, {
         type: 'error',
@@ -262,7 +269,7 @@ export class BoardGateway {
 
     try {
       const deleted = await this.boardService.deleteObject(ws.boardId, objectId)
-      this.broadcast(ws.boardKey, { type: 'object-deleted', payload: deleted })
+      this.broadcastBoardObjectEvent(ws.boardKey, 'delete-object', deleted)
     } catch (e) {
       this.send(ws, {
         type: 'error',
