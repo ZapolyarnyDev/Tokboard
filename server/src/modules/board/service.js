@@ -106,29 +106,98 @@ export class BoardService {
 
     const t = payload.type
 
-    if (t === 'TEXT' || t === 'IMAGE' || t === 'SHAPE') {
-      const shapeData = payload.shapeData
-        ? {
-            ...payload.shapeData,
-            points:
-              payload.shapeData.kind === 'LINE'
-                ? this.normalizeLinePoints(
-                    {
-                      ...payload,
-                      points: payload.shapeData.points,
-                    },
-                    base,
-                  )
-                : payload.shapeData.points,
-          }
-        : undefined
+    if (t === 'TEXT') {
+      const textData = payload.textData ?? {}
 
       return {
         type: t,
         ...base,
-        textData: payload.textData ?? undefined,
-        imageData: payload.imageData ?? undefined,
-        shapeData,
+        textData: {
+          text: this.stringOrNull(textData.text) ?? this.stringOrNull(payload.text) ?? '',
+          fontSize: this.finite(textData.fontSize)
+            ? textData.fontSize
+            : this.finite(payload.fontSize)
+              ? payload.fontSize
+              : undefined,
+          fontColor:
+            this.stringOrNull(textData.fontColor) ??
+            this.stringOrNull(payload.color) ??
+            this.stringOrNull(payload.fontColor) ??
+            undefined,
+        },
+      }
+    }
+
+    if (t === 'IMAGE') {
+      const imageData = payload.imageData ?? {}
+
+      return {
+        type: t,
+        ...base,
+        imageData: {
+          imageUrl:
+            this.stringOrNull(imageData.imageUrl) ??
+            this.stringOrNull(payload.src) ??
+            this.stringOrNull(payload.imageUrl) ??
+            '',
+        },
+      }
+    }
+
+    if (t === 'SHAPE') {
+      const shapeData = payload.shapeData ?? {}
+      const kind = this.stringOrNull(shapeData.kind) ?? this.stringOrNull(payload.kind)
+      const supportedKinds = ['LINE', 'RECTANGLE', 'TRIANGLE', 'CIRCLE', 'POLYGON']
+
+      if (!supportedKinds.includes(kind)) {
+        const err = new Error('Unsupported shape kind')
+        err.statusCode = 400
+        throw err
+      }
+
+      const points =
+        kind === 'LINE'
+          ? this.normalizeLinePoints(
+              {
+                ...payload,
+                points: shapeData.points ?? payload.points,
+              },
+              base,
+            )
+          : shapeData.points ?? payload.points ?? undefined
+      const objectBase =
+        kind === 'LINE'
+          ? {
+              ...base,
+              x: Math.min(points.x1, points.x2),
+              y: Math.min(points.y1, points.y2),
+              width: Math.abs(points.x2 - points.x1),
+              height: Math.abs(points.y2 - points.y1),
+            }
+          : base
+
+      return {
+        type: t,
+        ...objectBase,
+        shapeData: {
+          kind,
+          strokeColor:
+            this.stringOrNull(shapeData.strokeColor) ??
+            this.stringOrNull(payload.stroke) ??
+            this.stringOrNull(payload.strokeColor) ??
+            undefined,
+          fillColor:
+            this.stringOrNull(shapeData.fillColor) ??
+            this.stringOrNull(payload.fill) ??
+            this.stringOrNull(payload.fillColor) ??
+            undefined,
+          strokeWidth: this.finite(shapeData.strokeWidth)
+            ? shapeData.strokeWidth
+            : this.finite(payload.strokeWidth)
+              ? payload.strokeWidth
+              : undefined,
+          points,
+        },
       }
     }
 
