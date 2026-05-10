@@ -1,10 +1,15 @@
 <script setup>
+import { onMounted } from "vue"
 import { useAuthStore } from "./stores/auth"
 import GuestDashboard from "./pages/GuestDashboard.vue"
 import MainLayout from "./components/layout/MainLayout.vue"
 import TheHeader from "./components/layout/TheHeader.vue"
 
 const auth = useAuthStore()
+
+onMounted(() => {
+  auth.restore()
+})
 </script>
 
 <template>

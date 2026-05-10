@@ -9,6 +9,8 @@ import UiTypography from "../components/ui/UiTypography.vue"
 const auth = useAuthStore()
 const email = ref("")
 const password = ref("")
+const name = ref("")
+const mode = ref("login")
 
 const capabilities = [
   { icon: Shapes, title: "6 типов объектов", text: "текст, изображение, линия, прямоугольник, треугольник и круг" },
@@ -16,8 +18,20 @@ const capabilities = [
   { icon: Wifi, title: "Работа в реальном времени", text: "изменения на доске сразу видны всем участникам" }
 ]
 
-const handleLogin = () => {
-  auth.login({ name: "Пользователь", email: email.value || "student@tokboard.local" })
+const handleSubmit = async () => {
+  const normalizedEmail = email.value.trim()
+  const normalizedName = name.value.trim() || normalizedEmail.split("@")[0] || "User"
+
+  if (mode.value === "register") {
+    await auth.register({
+      email: normalizedEmail,
+      name: normalizedName,
+      password: password.value,
+    })
+    return
+  }
+
+  await auth.login(normalizedEmail, password.value)
 }
 </script>
 
@@ -50,12 +64,29 @@ const handleLogin = () => {
             </article>
           </div>
 
-          <form id="login" class="mt-8 grid gap-3 border border-border bg-bg-secondary p-4 md:grid-cols-[1fr_1fr_auto]" @submit.prevent="handleLogin">
+          <form id="login" class="mt-8 grid gap-3 border border-border bg-bg-secondary p-4 md:grid-cols-[1fr_1fr_auto]" @submit.prevent="handleSubmit">
+            <UiInput
+              v-if="mode === 'register'"
+              v-model="name"
+              class="md:col-span-3"
+              type="text"
+              placeholder="Name"
+            />
             <UiInput v-model="email" type="email" placeholder="student@mail.ru" />
             <UiInput v-model="password" type="password" placeholder="Пароль" />
-            <UiButton type="submit" class="h-10 whitespace-nowrap">
+            <UiButton type="submit" class="h-10 whitespace-nowrap" :disabled="auth.isLoading">
               Войти в доску
             </UiButton>
+            <button
+              type="button"
+              class="text-left text-sm text-accent md:col-span-3"
+              @click="mode = mode === 'login' ? 'register' : 'login'"
+            >
+              {{ mode === "login" ? "Create account" : "Back to login" }}
+            </button>
+            <p v-if="auth.error" class="text-sm text-red-600 md:col-span-3">
+              {{ auth.error }}
+            </p>
           </form>
         </div>
       </section>

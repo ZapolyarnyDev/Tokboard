@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import GuestDashboard from './GuestDashboard.vue'
 import { useAuthStore } from '../stores/auth.js'
+import * as authApi from '../api/auth.js'
 
 vi.mock('lucide-vue-next', () => ({
   Image: { template: '<span data-icon="image" />' },
@@ -14,8 +15,18 @@ vi.mock('lucide-vue-next', () => ({
   Wifi: { template: '<span data-icon="wifi" />' },
 }))
 
+vi.mock('../api/auth.js', () => ({
+  login: vi.fn(),
+  register: vi.fn(),
+  refresh: vi.fn(),
+  logout: vi.fn(),
+  me: vi.fn(),
+}))
+
 describe('GuestDashboard', () => {
   beforeEach(() => {
+    localStorage.clear()
+    vi.clearAllMocks()
     setActivePinia(createPinia())
   })
 
@@ -39,16 +50,17 @@ describe('GuestDashboard', () => {
     const wrapper = mountDashboard()
     const auth = useAuthStore()
     const loginSpy = vi.spyOn(auth, 'login')
+    authApi.login.mockResolvedValue({
+      user: { id: 1, name: 'Student', email: 'student@example.com', role: 'USER' },
+      accessToken: 'access-token',
+    })
 
     const inputs = wrapper.findAll('input')
     await inputs[0].setValue('student@example.com')
     await inputs[1].setValue('password123')
     await wrapper.find('form#login').trigger('submit')
 
-    expect(loginSpy).toHaveBeenCalledWith({
-      name: 'Пользователь',
-      email: 'student@example.com',
-    })
+    expect(loginSpy).toHaveBeenCalledWith('student@example.com', 'password123')
     expect(auth.isAuthenticated).toBe(true)
   })
 })

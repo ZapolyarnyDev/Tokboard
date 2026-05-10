@@ -1,11 +1,16 @@
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount, computed } from "vue"
+import { uploadBoardImage, resolveAssetUrl, WS_URL } from "../../api/board"
+import { useAuthStore } from "../../stores/auth"
 import { useUiStore } from "../../stores/ui"
 import StylePanel from "./StylePanel.vue"
 
+const BOARD_ID = "main"
 const ui = useUiStore()
+const auth = useAuthStore()
 const canvasRef = ref(null)
 const fileInputRef = ref(null)
+let ws = null
 let idCounter = 1
 
 const state = reactive({
@@ -29,6 +34,65 @@ const state = reactive({
   snapGuides: [],
   shiftPressed: false
 })
+
+const upsertShape = (shape) => {
+  const index = state.shapes.findIndex(item => item.id === shape.id)
+  if (index === -1) state.shapes.push(shape)
+  else state.shapes[index] = { ...state.shapes[index], ...shape }
+}
+
+const removeShape = (id) => {
+  state.shapes = state.shapes.filter(shape => shape.id !== id)
+  state.selectedIds = state.selectedIds.filter(selectedId => selectedId !== id)
+}
+
+const sendBoardEvent = (type, payload) => {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return false
+  ws.send(JSON.stringify({ type, payload }))
+  return true
+}
+
+const createRemoteShape = (shape) => {
+  if (sendBoardEvent("create-object", shape)) removeShape(shape.id)
+}
+
+const connectBoardSocket = () => {
+  if (!auth.accessToken || ws) return
+
+  ws = new WebSocket(WS_URL)
+
+  ws.addEventListener("open", () => {
+    ws.send(JSON.stringify({ type: "auth", accessToken: auth.accessToken }))
+    ws.send(JSON.stringify({ type: "join-board", boardId: BOARD_ID }))
+  })
+
+  ws.addEventListener("message", (event) => {
+    let data
+    try {
+      data = JSON.parse(event.data)
+    } catch {
+      return
+    }
+
+    if (data.type === "board-state") {
+      state.shapes = data.payload?.objects || []
+      return
+    }
+
+    if (["create-object", "update-object", "move-object"].includes(data.type)) {
+      upsertShape(data.payload)
+      return
+    }
+
+    if (data.type === "delete-object") {
+      removeShape(data.payload?.id)
+    }
+  })
+
+  ws.addEventListener("close", () => {
+    ws = null
+  })
+}
 
 const GRID_SIZE = 20
 const MIN_DRAG_SIZE = 4
@@ -151,7 +215,7 @@ const beginDrawing = (point) => {
 
   if (ui.tool === "line") {
     const shape = {
-      id: idCounter++,
+      id: `local-${idCounter++}`,
       type: "line",
       x1: snappedX,
       y1: snappedY,
@@ -168,7 +232,7 @@ const beginDrawing = (point) => {
   state.drawStart = { x: snappedX, y: snappedY }
 
   const shape = {
-    id: idCounter++,
+    id: `local-${idCounter++}`,
     type: ui.tool,
     x: snappedX,
     y: snappedY,
@@ -194,6 +258,7 @@ const finishDrawing = () => {
   } else {
     state.selectedIds = [shape.id]
     ui.setTool("select")
+    createRemoteShape(shape)
   }
 
   state.isDrawing = false
@@ -369,6 +434,14 @@ const handleMouseUp = () => {
     return
   }
 
+  if (state.dragMoved) {
+    const ids = state.isResizing ? state.selectedIds : state.draggingIds
+    ids.forEach(id => {
+      const shape = state.shapes.find(item => item.id === id)
+      if (!shape) return
+      sendBoardEvent(shape.type === "line" || state.isResizing ? "update-object" : "move-object", shape)
+    })
+  }
   state.isDragging = false
   state.draggingIds = []
   state.dragOriginals = []
@@ -436,6 +509,7 @@ const handleKey = (e) => {
   }
 
   if (e.key === "Delete" && state.selectedIds.length > 0) {
+    state.selectedIds.forEach(id => sendBoardEvent("delete-object", { id }))
     state.shapes = state.shapes.filter(
       shape => !state.selectedIds.includes(shape.id)
     )
@@ -522,7 +596,7 @@ const handleCanvasClick = (e) => {
 
   if (ui.tool === "text") {
     const shape = {
-      id: idCounter++,
+      id: `local-${idCounter++}`,
       type: "text",
       x: snapToGrid(point.x),
       y: snapToGrid(point.y),
@@ -536,6 +610,7 @@ const handleCanvasClick = (e) => {
     state.shapes.push(shape)
     state.selectedIds = [shape.id]
     ui.setTool("select")
+    createRemoteShape(shape)
     return
   }
 
@@ -554,16 +629,23 @@ const handleFileChange = (e) => {
 
   const reader = new FileReader()
 
-  reader.onload = (event) => {
+  reader.onload = async (event) => {
     const point = state.pendingImagePoint || { x: 100, y: 100 }
+    let src = event.target.result
+
+    if (auth.accessToken) {
+      const uploaded = await uploadBoardImage(src, auth.accessToken)
+      src = uploaded.imageUrl
+    }
+
     const shape = {
-      id: idCounter++,
+      id: `local-${idCounter++}`,
       type: "image",
       x: point.x,
       y: point.y,
       width: 150,
       height: 100,
-      src: event.target.result,
+      src,
       stroke: "#4DA3FF"
     }
 
@@ -571,6 +653,7 @@ const handleFileChange = (e) => {
     state.selectedIds = [shape.id]
     state.pendingImagePoint = null
     ui.setTool("select")
+    createRemoteShape(shape)
   }
 
   reader.readAsDataURL(file)
@@ -605,15 +688,19 @@ const handleStyleUpdate = ({ property, value }) => {
     } else {
       shape[property] = value
     }
+
+    sendBoardEvent("update-object", shape)
   })
 }
 
 onMounted(() => {
+  connectBoardSocket()
   window.addEventListener("keydown", handleKey)
   window.addEventListener("keyup", handleKeyUp)
 })
 
 onBeforeUnmount(() => {
+  ws?.close()
   window.removeEventListener("keydown", handleKey)
   window.removeEventListener("keyup", handleKeyUp)
 })
@@ -731,13 +818,14 @@ onBeforeUnmount(() => {
         }"
         :class="state.selectedIds.includes(shape.id) ? 'ring-1 ring-accent ring-offset-0' : ''"
         @input="(e) => shape.text = e.target.innerText"
+        @blur="sendBoardEvent('update-object', shape)"
       >
         {{ shape.text }}
       </div>
 
       <img
         v-if="shape.type === 'image'"
-        :src="shape.src"
+        :src="resolveAssetUrl(shape.src)"
         :style="{
           width: shape.width + 'px',
           height: shape.height + 'px',
