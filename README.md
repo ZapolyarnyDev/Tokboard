@@ -78,3 +78,31 @@
 - Собирается образ командой `docker build -t app .`
 - Образ пушится в GitHub Container Registry
 - Хостинг автоматически забирает новый образ и перезапускает контейнер
+## Тестирование
+
+Тесты запускаются из корня проекта через npm workspaces.
+
+```bash
+npm ci
+npm test
+```
+
+Отдельно frontend:
+
+```bash
+npm test --workspace client
+```
+
+Отдельно backend:
+
+```bash
+npm test --workspace server
+```
+
+Покрытие:
+
+```bash
+npm run test:coverage
+```
+
+Подробности и минимальная инструкция находятся в [TESTING.md](./TESTING.md).
