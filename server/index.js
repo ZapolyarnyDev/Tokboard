@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import express from 'express'
 import { createServer } from 'node:http'
+import path from 'node:path'
 import { WebSocketServer } from 'ws'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
@@ -11,6 +12,7 @@ const port = process.env.PORT ?? 3000
 import { BoardRepository } from './src/modules/board/repository.js'
 import { BoardService } from './src/modules/board/service.js'
 import { BoardGateway } from './src/modules/board/gateway.js'
+import { boardRouter } from './src/modules/board/router.js'
 import { authRouter } from './src/modules/auth/router.js'
 
 const corsOrigins = process.env.CORS_ORIGIN?.split(',')
@@ -23,9 +25,11 @@ app.use(
   }),
 )
 app.use(cookieParser())
-app.use(express.json())
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT ?? '10mb' }))
+app.use('/uploads', express.static(path.resolve('uploads')))
 
 app.use('/auth', authRouter)
+app.use('/board', boardRouter)
 const server = createServer(app)
 const wss = new WebSocketServer({ server })
 
