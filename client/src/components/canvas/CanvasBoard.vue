@@ -11,6 +11,9 @@ const canvasRef = ref(null)
 const fileInputRef = ref(null)
 let ws = null
 let idCounter = 1
+let lastMoveSyncAt = 0
+
+const MOVE_SYNC_INTERVAL_MS = 120
 
 const state = reactive({
   shapes: [],
@@ -51,6 +54,28 @@ const sendBoardEvent = (type, payload) => {
   return true
 }
 
+const isLocalEditing = (id) => {
+  if (!id) return false
+  return (
+    state.draggingIds.includes(id) ||
+    state.currentShape?.id === id ||
+    (state.isResizing && state.selectedIds.includes(id))
+  )
+}
+
+const syncEditedShapes = (force = false) => {
+  const now = Date.now()
+  if (!force && now - lastMoveSyncAt < MOVE_SYNC_INTERVAL_MS) return
+
+  lastMoveSyncAt = now
+  const ids = state.isResizing ? state.selectedIds : state.draggingIds
+  ids.forEach(id => {
+    const shape = state.shapes.find(item => item.id === id)
+    if (!shape) return
+    sendBoardEvent(shape.type === "line" || state.isResizing ? "update-object" : "move-object", shape)
+  })
+}
+
 const createRemoteShape = (shape) => {
   if (sendBoardEvent("create-object", shape)) removeShape(shape.id)
 }
@@ -79,6 +104,7 @@ const connectBoardSocket = () => {
     }
 
     if (["create-object", "update-object", "move-object"].includes(data.type)) {
+      if (isLocalEditing(data.payload?.id)) return
       upsertShape(data.payload)
       return
     }
@@ -300,6 +326,14 @@ const handleMouseDown = (e) => {
 }
 
 const handleMouseMove = (e) => {
+  if (
+    (state.isSelecting || state.isDrawing || state.isDragging || state.isResizing) &&
+    e.buttons === 0
+  ) {
+    handleMouseUp()
+    return
+  }
+
   const point = getPoint(e)
 
   if (state.isSelecting) {
@@ -388,6 +422,7 @@ const handleMouseMove = (e) => {
       }
     })
 
+    syncEditedShapes()
     return
   }
 
@@ -419,6 +454,10 @@ const handleMouseMove = (e) => {
         state.snapGuides = findSnapGuides(bounds)
       }
     }
+
+    if (state.dragMoved) {
+      syncEditedShapes()
+    }
   }
 }
 
@@ -433,14 +472,7 @@ const handleMouseUp = () => {
     return
   }
 
-  if (state.dragMoved) {
-    const ids = state.isResizing ? state.selectedIds : state.draggingIds
-    ids.forEach(id => {
-      const shape = state.shapes.find(item => item.id === id)
-      if (!shape) return
-      sendBoardEvent(shape.type === "line" || state.isResizing ? "update-object" : "move-object", shape)
-    })
-  }
+  if (state.dragMoved) syncEditedShapes(true)
   state.isDragging = false
   state.draggingIds = []
   state.dragOriginals = []
@@ -696,6 +728,8 @@ onMounted(() => {
   connectBoardSocket()
   window.addEventListener("keydown", handleKey)
   window.addEventListener("keyup", handleKeyUp)
+  window.addEventListener("mouseup", handleMouseUp)
+  window.addEventListener("blur", handleMouseUp)
 })
 
 watch(
@@ -713,6 +747,8 @@ onBeforeUnmount(() => {
   ws?.close()
   window.removeEventListener("keydown", handleKey)
   window.removeEventListener("keyup", handleKeyUp)
+  window.removeEventListener("mouseup", handleMouseUp)
+  window.removeEventListener("blur", handleMouseUp)
 })
 </script>
 
