@@ -876,7 +876,9 @@ onBeforeUnmount(() => {
           width: shape.width + 'px',
           height: shape.height + 'px',
           border: '2px solid ' + shape.stroke,
-          objectFit: 'cover'
+          objectFit: 'cover',
+          userSelect: 'none',
+          WebkitUserDrag: 'none'
         }"
         :class="state.selectedIds.includes(shape.id) ? 'ring-1 ring-accent ring-offset-0' : ''"
       />
