@@ -20,6 +20,13 @@ export class BoardRepository {
     })
   }
 
+  listBoardsByOwnerId(ownerId) {
+    return prisma.board.findMany({
+      where: { ownerId },
+      orderBy: { updatedAt: 'desc' },
+    })
+  }
+
   findObjectById(id) {
     return prisma.boardObject.findUnique({
       where: { id },

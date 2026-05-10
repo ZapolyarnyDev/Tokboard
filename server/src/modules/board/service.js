@@ -47,6 +47,53 @@ export class BoardService {
     return this.repo.listObjectsByBoardId(boardId)
   }
 
+  toClientBoard(board) {
+    return {
+      id: board.id,
+      title: board.title,
+      ownerId: board.ownerId,
+      createdAt: board.createdAt,
+      updatedAt: board.updatedAt,
+    }
+  }
+
+  async listUserBoards(userId) {
+    const boards = await this.repo.listBoardsByOwnerId(Number(userId))
+    return boards.map((board) => this.toClientBoard(board))
+  }
+
+  async createBoardForUser({ title, userId }) {
+    const boardTitle =
+      typeof title === 'string' && title.trim()
+        ? title.trim()
+        : `Board ${new Date().toLocaleString('ru-RU')}`
+
+    const created = await this.repo.createBoard({
+      title: boardTitle,
+      ownerId: Number(userId),
+    })
+
+    return this.toClientBoard(created)
+  }
+
+  async getBoardForJoin(boardIdRaw) {
+    const boardId = Number(boardIdRaw)
+    if (!Number.isInteger(boardId) || boardId <= 0) {
+      const err = new Error('Invalid boardId')
+      err.statusCode = 400
+      throw err
+    }
+
+    const board = await this.repo.findBoardById(boardId)
+    if (!board) {
+      const err = new Error('Board not found')
+      err.statusCode = 404
+      throw err
+    }
+
+    return this.toClientBoard(board)
+  }
+
   async ensureBoardFromJoin({ boardIdRaw, userId }) {
     const asNumber =
       typeof boardIdRaw === 'number'

@@ -1,11 +1,10 @@
 <script setup>
-import { ref, reactive, onMounted, onBeforeUnmount, computed } from "vue"
+import { ref, reactive, onMounted, onBeforeUnmount, computed, watch } from "vue"
 import { uploadBoardImage, resolveAssetUrl, WS_URL } from "../../api/board"
 import { useAuthStore } from "../../stores/auth"
 import { useUiStore } from "../../stores/ui"
 import StylePanel from "./StylePanel.vue"
 
-const BOARD_ID = "main"
 const ui = useUiStore()
 const auth = useAuthStore()
 const canvasRef = ref(null)
@@ -57,13 +56,13 @@ const createRemoteShape = (shape) => {
 }
 
 const connectBoardSocket = () => {
-  if (!auth.accessToken || ws) return
+  if (!auth.accessToken || !ui.activeBoardId || ws) return
 
   ws = new WebSocket(WS_URL)
 
   ws.addEventListener("open", () => {
     ws.send(JSON.stringify({ type: "auth", accessToken: auth.accessToken }))
-    ws.send(JSON.stringify({ type: "join-board", boardId: BOARD_ID }))
+    ws.send(JSON.stringify({ type: "join-board", boardId: ui.activeBoardId }))
   })
 
   ws.addEventListener("message", (event) => {
@@ -698,6 +697,17 @@ onMounted(() => {
   window.addEventListener("keydown", handleKey)
   window.addEventListener("keyup", handleKeyUp)
 })
+
+watch(
+  () => ui.activeBoardId,
+  () => {
+    state.shapes = []
+    state.selectedIds = []
+    ws?.close()
+    ws = null
+    connectBoardSocket()
+  }
+)
 
 onBeforeUnmount(() => {
   ws?.close()

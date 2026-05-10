@@ -2,17 +2,38 @@ import { defineStore } from "pinia"
 
 export const useUiStore = defineStore("ui", {
   state: () => ({
-    activeBoard: "Доска 1",
-
+    boards: [],
+    activeBoardId: null,
+    activeBoard: "No board",
     tool: "select",
-
     isSidebarCollapsed: false,
     collapsedProjects: {}
   }),
 
   actions: {
-    setBoard(name) {
-      this.activeBoard = name
+    setBoards(boards) {
+      this.boards = boards
+      if (!this.activeBoardId && boards.length > 0) {
+        this.setBoard(boards[0])
+      }
+    },
+
+    setBoard(board) {
+      this.activeBoardId = board.id
+      this.activeBoard = board.title || `Board ${board.id}`
+      if (!this.boards.some((item) => item.id === board.id)) {
+        this.boards = [board, ...this.boards]
+      }
+    },
+
+    addBoard(board) {
+      this.boards = [board, ...this.boards.filter((item) => item.id !== board.id)]
+      this.setBoard(board)
+    },
+
+    leaveBoard() {
+      this.activeBoardId = null
+      this.activeBoard = "No board"
     },
 
     setTool(tool) {
