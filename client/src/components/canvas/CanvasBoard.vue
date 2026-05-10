@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount, computed } from "vue"
-import { WS_URL } from "../../api/board"
+import { uploadBoardImage, resolveAssetUrl, WS_URL } from "../../api/board"
 import { useAuthStore } from "../../stores/auth"
 import { useUiStore } from "../../stores/ui"
 import StylePanel from "./StylePanel.vue"
@@ -629,8 +629,14 @@ const handleFileChange = (e) => {
 
   const reader = new FileReader()
 
-  reader.onload = (event) => {
+  reader.onload = async (event) => {
     const point = state.pendingImagePoint || { x: 100, y: 100 }
+    let src = event.target.result
+
+    if (auth.accessToken) {
+      const uploaded = await uploadBoardImage(src, auth.accessToken)
+      src = uploaded.imageUrl
+    }
 
     const shape = {
       id: `local-${idCounter++}`,
@@ -639,7 +645,7 @@ const handleFileChange = (e) => {
       y: point.y,
       width: 150,
       height: 100,
-      src: event.target.result,
+      src,
       stroke: "#4DA3FF"
     }
 
@@ -819,7 +825,7 @@ onBeforeUnmount(() => {
 
       <img
         v-if="shape.type === 'image'"
-        :src="shape.src"
+        :src="resolveAssetUrl(shape.src)"
         :style="{
           width: shape.width + 'px',
           height: shape.height + 'px',
