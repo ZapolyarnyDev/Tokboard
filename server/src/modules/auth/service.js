@@ -24,7 +24,7 @@ export class AuthService {
   async register({ email, name, password }) {
     const existing = await this.repo.findUserByEmail(email)
     if (existing) {
-      const err = new Error('Registration failed')
+      const err = new Error('Не удалось зарегистрироваться')
       err.statusCode = 400
       throw err
     }
@@ -43,14 +43,14 @@ export class AuthService {
   async login({ email, password }) {
     const user = await this.repo.findUserByEmail(email)
     if (!user) {
-      const err = new Error('Invalid credentials')
+      const err = new Error('Некорректный email или пароль')
       err.statusCode = 401
       throw err
     }
 
     const ok = await bcrypt.compare(password, user.passwordHash)
     if (!ok) {
-      const err = new Error('Invalid credentials')
+      const err = new Error('Некорректный email или пароль')
       err.statusCode = 401
       throw err
     }
@@ -64,7 +64,7 @@ export class AuthService {
     try {
       decoded = verifyRefreshToken(refreshToken)
     } catch {
-      const err = new Error('Invalid refresh token')
+      const err = new Error('Некорректный refresh-токен')
       err.statusCode = 401
       throw err
     }

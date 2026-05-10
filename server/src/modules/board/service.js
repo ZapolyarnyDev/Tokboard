@@ -40,11 +40,58 @@ export class BoardService {
   async listBoardObjects(boardId) {
     const board = await this.repo.findBoardById(boardId)
     if (!board) {
-      const err = new Error('Board not found')
+      const err = new Error('Доска не найдена')
       err.statusCode = 404
       throw err
     }
     return this.repo.listObjectsByBoardId(boardId)
+  }
+
+  toClientBoard(board) {
+    return {
+      id: board.id,
+      title: board.title,
+      ownerId: board.ownerId,
+      createdAt: board.createdAt,
+      updatedAt: board.updatedAt,
+    }
+  }
+
+  async listUserBoards(userId) {
+    const boards = await this.repo.listBoardsByOwnerId(Number(userId))
+    return boards.map((board) => this.toClientBoard(board))
+  }
+
+  async createBoardForUser({ title, userId }) {
+    const boardTitle =
+      typeof title === 'string' && title.trim()
+        ? title.trim()
+        : `Доска ${new Date().toLocaleString('ru-RU')}`
+
+    const created = await this.repo.createBoard({
+      title: boardTitle,
+      ownerId: Number(userId),
+    })
+
+    return this.toClientBoard(created)
+  }
+
+  async getBoardForJoin(boardIdRaw) {
+    const boardId = Number(boardIdRaw)
+    if (!Number.isInteger(boardId) || boardId <= 0) {
+      const err = new Error('Некорректный ID доски')
+      err.statusCode = 400
+      throw err
+    }
+
+    const board = await this.repo.findBoardById(boardId)
+    if (!board) {
+      const err = new Error('Доска не найдена')
+      err.statusCode = 404
+      throw err
+    }
+
+    return this.toClientBoard(board)
   }
 
   async ensureBoardFromJoin({ boardIdRaw, userId }) {
@@ -58,7 +105,7 @@ export class BoardService {
     if (Number.isInteger(asNumber) && asNumber > 0) {
       const board = await this.repo.findBoardById(asNumber)
       if (!board) {
-        const err = new Error('Board not found')
+        const err = new Error('Доска не найдена')
         err.statusCode = 404
         throw err
       }
@@ -66,7 +113,7 @@ export class BoardService {
     }
 
     if (typeof boardIdRaw !== 'string' || !boardIdRaw.trim()) {
-      const err = new Error('Invalid boardId')
+      const err = new Error('Некорректный ID доски')
       err.statusCode = 400
       throw err
     }
@@ -76,7 +123,7 @@ export class BoardService {
     if (existing) return { boardId: existing.id, boardKey: String(existing.id) }
 
     if (!userId) {
-      const err = new Error('Board not found')
+      const err = new Error('Доска не найдена')
       err.statusCode = 404
       throw err
     }
@@ -91,7 +138,7 @@ export class BoardService {
 
   normalizeIncomingObject(payload) {
     if (!payload || typeof payload !== 'object') {
-      const err = new Error('Invalid payload')
+      const err = new Error('Некорректные данные')
       err.statusCode = 400
       throw err
     }
@@ -150,7 +197,7 @@ export class BoardService {
       const supportedKinds = ['LINE', 'RECTANGLE', 'TRIANGLE', 'CIRCLE', 'POLYGON']
 
       if (!supportedKinds.includes(kind)) {
-        const err = new Error('Unsupported shape kind')
+        const err = new Error('Неподдерживаемый тип фигуры')
         err.statusCode = 400
         throw err
       }
@@ -273,7 +320,7 @@ export class BoardService {
       }
     }
 
-    const err = new Error('Unsupported object type')
+    const err = new Error('Неподдерживаемый тип объекта')
     err.statusCode = 400
     throw err
   }
@@ -351,7 +398,7 @@ export class BoardService {
     const normalized = this.normalizeIncomingObject(payload)
     const board = await this.repo.findBoardById(boardId)
     if (!board) {
-      const err = new Error('Board not found')
+      const err = new Error('Доска не найдена')
       err.statusCode = 404
       throw err
     }
@@ -362,7 +409,7 @@ export class BoardService {
   async updateObject(boardId, objectId, payload) {
     const existing = await this.repo.findObjectById(objectId)
     if (!existing || existing.boardId !== boardId) {
-      const err = new Error('Object not found')
+      const err = new Error('Объект не найден')
       err.statusCode = 404
       throw err
     }
@@ -390,7 +437,7 @@ export class BoardService {
   async moveObject(payload) {
     const exists = await this.repo.findObjectById(payload.id)
     if (!exists) {
-      const err = new Error('Object not found')
+      const err = new Error('Объект не найден')
       err.statusCode = 404
       throw err
     }
@@ -401,7 +448,7 @@ export class BoardService {
   async moveObjectOnBoard(boardId, objectId, payload) {
     const existing = await this.repo.findObjectById(objectId)
     if (!existing || existing.boardId !== boardId) {
-      const err = new Error('Object not found')
+      const err = new Error('Объект не найден')
       err.statusCode = 404
       throw err
     }
@@ -486,7 +533,7 @@ export class BoardService {
   async deleteObject(boardId, objectId) {
     const existing = await this.repo.findObjectById(objectId)
     if (!existing || existing.boardId !== boardId) {
-      const err = new Error('Object not found')
+      const err = new Error('Объект не найден')
       err.statusCode = 404
       throw err
     }

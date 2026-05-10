@@ -4,8 +4,11 @@ import path from 'node:path'
 import express from 'express'
 
 import { requireAuth } from '../../middlewares/auth.js'
+import { BoardRepository } from './repository.js'
+import { BoardService } from './service.js'
 
 const router = express.Router()
+const boardService = new BoardService(new BoardRepository())
 
 const uploadRoot = path.resolve('uploads', 'board-images')
 const maxImageBytes = Number(process.env.BOARD_IMAGE_MAX_BYTES ?? 5 * 1024 * 1024)
@@ -16,6 +19,36 @@ const imageTypes = {
   'image/png': 'png',
   'image/webp': 'webp',
 }
+
+router.get('/', requireAuth, async (req, res) => {
+  try {
+    const boards = await boardService.listUserBoards(req.user.sub)
+    return res.status(200).json({ boards })
+  } catch (e) {
+    return res.status(e.statusCode ?? 500).json({ message: e.message ?? 'Не удалось загрузить доски' })
+  }
+})
+
+router.post('/', requireAuth, async (req, res) => {
+  try {
+    const board = await boardService.createBoardForUser({
+      title: req.body?.title,
+      userId: req.user.sub,
+    })
+    return res.status(201).json({ board })
+  } catch (e) {
+    return res.status(e.statusCode ?? 500).json({ message: e.message ?? 'Не удалось создать доску' })
+  }
+})
+
+router.get('/:id', requireAuth, async (req, res) => {
+  try {
+    const board = await boardService.getBoardForJoin(req.params.id)
+    return res.status(200).json({ board })
+  } catch (e) {
+    return res.status(e.statusCode ?? 500).json({ message: e.message ?? 'Не удалось загрузить доску' })
+  }
+})
 
 function parseImageBody(body) {
   const rawData = body?.dataUrl ?? body?.base64
@@ -44,7 +77,7 @@ router.post('/uploads/images', requireAuth, async (req, res) => {
   const parsed = parseImageBody(req.body)
   if (!parsed) {
     return res.status(400).json({
-      message: 'Expected image dataUrl or base64 with a supported contentType',
+      message: 'Ожидается dataUrl изображения или base64 с поддерживаемым contentType',
     })
   }
 
@@ -52,11 +85,11 @@ router.post('/uploads/images', requireAuth, async (req, res) => {
   try {
     buffer = Buffer.from(parsed.base64, 'base64')
   } catch {
-    return res.status(400).json({ message: 'Invalid base64 image data' })
+    return res.status(400).json({ message: 'Некорректные base64-данные изображения' })
   }
 
   if (!buffer.length || buffer.length > maxImageBytes) {
-    return res.status(413).json({ message: 'Image is empty or too large' })
+    return res.status(413).json({ message: 'Изображение пустое или слишком большое' })
   }
 
   const ext = imageTypes[parsed.contentType]

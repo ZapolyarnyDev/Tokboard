@@ -44,11 +44,11 @@ class FakeAuthRepository {
   async rotateRefreshToken(tokenHash, userId) {
     const record = this.refreshTokens.find((token) => token.tokenHash === tokenHash)
     if (!record || record.revokedAt) {
-      return { success: false, error: 'Refresh token revoked' }
+      return { success: false, error: 'Refresh-токен отозван' }
     }
     if (record.expiresAt.getTime() <= Date.now()) {
       record.revokedAt = new Date()
-      return { success: false, error: 'Refresh token expired' }
+      return { success: false, error: 'Refresh-токен истек' }
     }
 
     const user = this.users.find((item) => item.id === userId)

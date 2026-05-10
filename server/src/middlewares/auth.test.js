@@ -22,7 +22,7 @@ describe('requireAuth middleware', () => {
     const res = await request(createApp()).get('/me')
 
     expect(res.status).toBe(401)
-    expect(res.body.message).toBe('Missing access token')
+    expect(res.body.message).toBe('Не передан access-токен')
   })
 
   test('rejects invalid bearer tokens', async () => {
@@ -31,7 +31,7 @@ describe('requireAuth middleware', () => {
       .set('Authorization', 'Bearer invalid-token')
 
     expect(res.status).toBe(401)
-    expect(res.body.message).toBe('Invalid access token')
+    expect(res.body.message).toBe('Некорректный access-токен')
   })
 
   test('passes decoded user payload for valid bearer tokens', async () => {

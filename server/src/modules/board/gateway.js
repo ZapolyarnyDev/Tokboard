@@ -128,7 +128,7 @@ export class BoardGateway {
       this.send(ws, {
         type: 'error',
         payload: {
-          message: e.message ?? 'Join failed',
+          message: e.message ?? 'Не удалось подключиться к доске',
         },
       })
       return
@@ -158,7 +158,7 @@ export class BoardGateway {
       this.send(ws, {
         type: 'error',
         payload: {
-          message: e.message ?? 'Failed to load board',
+          message: e.message ?? 'Не удалось загрузить доску',
         },
       })
     }
@@ -217,7 +217,7 @@ export class BoardGateway {
     } catch (e) {
       this.send(ws, {
         type: 'error',
-        payload: { message: e.message ?? 'Create failed' },
+        payload: { message: e.message ?? 'Не удалось создать объект' },
       })
     }
   }
@@ -237,7 +237,7 @@ export class BoardGateway {
     } catch (e) {
       this.send(ws, {
         type: 'error',
-        payload: { message: e.message ?? 'Update failed' },
+        payload: { message: e.message ?? 'Не удалось обновить объект' },
       })
     }
   }
@@ -257,7 +257,7 @@ export class BoardGateway {
     } catch (e) {
       this.send(ws, {
         type: 'error',
-        payload: { message: e.message ?? 'Move failed' },
+        payload: { message: e.message ?? 'Не удалось переместить объект' },
       })
     }
   }
@@ -273,7 +273,7 @@ export class BoardGateway {
     } catch (e) {
       this.send(ws, {
         type: 'error',
-        payload: { message: e.message ?? 'Delete failed' },
+        payload: { message: e.message ?? 'Не удалось удалить объект' },
       })
     }
   }

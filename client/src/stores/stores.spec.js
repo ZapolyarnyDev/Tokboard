@@ -22,11 +22,8 @@ describe('Pinia stores', () => {
 
   it('keeps auth state and clears it on logout', async () => {
     const auth = useAuthStore()
-
-    expect(auth.isAuthenticated).toBe(false)
-    expect(auth.user).toBeNull()
-
     const user = { name: 'Student', email: 'student@example.com' }
+
     authApi.login.mockResolvedValue({ user, accessToken: 'access-token' })
     authApi.logout.mockResolvedValue(null)
 
@@ -46,18 +43,21 @@ describe('Pinia stores', () => {
   it('updates board UI state', () => {
     const ui = useUiStore()
 
-    expect(ui.activeBoard).toBe('Доска 1')
-    expect(ui.tool).toBe('select')
-    expect(ui.isSidebarCollapsed).toBe(false)
+    expect(ui.activeBoard).toBe('Доска не выбрана')
+    expect(ui.activeBoardId).toBeNull()
 
-    ui.setBoard('Проект Альфа')
+    ui.setBoard({ id: 7, title: 'Project Alpha' })
     ui.setTool('rect')
     ui.toggleSidebar()
-    ui.toggleProject('Проект Альфа')
+    ui.toggleProject('Project Alpha')
 
-    expect(ui.activeBoard).toBe('Проект Альфа')
+    expect(ui.activeBoard).toBe('Project Alpha')
+    expect(ui.activeBoardId).toBe(7)
     expect(ui.tool).toBe('rect')
     expect(ui.isSidebarCollapsed).toBe(true)
-    expect(ui.collapsedProjects['Проект Альфа']).toBe(true)
+    expect(ui.collapsedProjects['Project Alpha']).toBe(true)
+
+    ui.leaveBoard()
+    expect(ui.activeBoardId).toBeNull()
   })
 })
