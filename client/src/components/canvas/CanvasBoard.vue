@@ -753,10 +753,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex h-full">
+  <div class="canvas-wrapper">
     <div
       ref="canvasRef"
-      class="relative flex-1 overflow-hidden"
+      class="canvas-area"
       :style="{ cursor: ui.tool === 'select' ? 'default' : 'crosshair' }"
       @mousedown="handleMouseDown"
       @mousemove="handleMouseMove"
@@ -765,19 +765,13 @@ onBeforeUnmount(() => {
       @click="handleCanvasClick"
     >
       <div
-        class="absolute inset-0 pointer-events-none"
-        style="
-          background-size: 20px 20px;
-          background-image:
-            linear-gradient(to right, rgba(0, 0, 0, 0.03) 0.5px, transparent 0.5px),
-            linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 0.5px, transparent 0.5px);
-        "
+        class="canvas-grid"
       />
 
     <div
       v-for="guide in state.snapGuides"
       :key="`${guide.type}-${guide.pos}`"
-      class="absolute pointer-events-none"
+      class="snap-guide"
       :style="guide.type === 'vertical'
         ? { left: guide.pos + 'px', top: 0, width: '1px', height: '100%', background: '#FF6B9D' }
         : { top: guide.pos + 'px', left: 0, height: '1px', width: '100%', background: '#FF6B9D' }
@@ -786,7 +780,7 @@ onBeforeUnmount(() => {
 
     <div
       v-if="state.isSelecting"
-      class="absolute border border-accent bg-accent-light opacity-40 pointer-events-none"
+      class="selection-box"
       :style="{
         left: Math.min(state.selectionStart.x, state.selectionCurrent.x) + 'px',
         top: Math.min(state.selectionStart.y, state.selectionCurrent.y) + 'px',
@@ -798,7 +792,7 @@ onBeforeUnmount(() => {
     <div
       v-for="shape in state.shapes"
       :key="shape.id"
-      class="absolute cursor-move"
+      class="shape-wrapper"
       :style="getShapeWrapperStyle(shape)"
       @mousedown.stop="(e) => startDrag(e, shape)"
       @click.stop="selectShape(shape)"
@@ -857,7 +851,7 @@ onBeforeUnmount(() => {
       <div
         v-if="shape.type === 'text'"
         contenteditable
-        class="min-w-[80px] min-h-[30px] px-2 py-1 border border-border bg-white"
+        class="text-shape"
         :style="{
           fontSize: (shape.fontSize || 14) + 'px',
           color: shape.color || '#000000'
@@ -886,7 +880,7 @@ onBeforeUnmount(() => {
 
     <div
       v-if="selectionBounds && state.selectedIds.length > 0 && !state.isDrawing"
-      class="absolute pointer-events-none border border-accent"
+      class="selection-bounds"
       :style="{
         left: selectionBounds.x - 2 + 'px',
         top: selectionBounds.y - 2 + 'px',
@@ -897,7 +891,7 @@ onBeforeUnmount(() => {
       <div
         v-for="handle in ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']"
         :key="handle"
-        class="absolute w-2 h-2 bg-white border border-accent pointer-events-auto"
+        class="resize-handle"
         :class="{
           'cursor-nw-resize': handle === 'nw' || handle === 'se',
           'cursor-ne-resize': handle === 'ne' || handle === 'sw',
@@ -927,3 +921,87 @@ onBeforeUnmount(() => {
   />
 </div>
 </template>
+
+<style scoped>
+.canvas-wrapper {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.canvas-area {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.canvas-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-size: 20px 20px;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.03) 0.5px, transparent 0.5px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 0.5px, transparent 0.5px);
+}
+
+.snap-guide {
+  position: absolute;
+  pointer-events: none;
+}
+
+.selection-box {
+  position: absolute;
+  border: 1px solid var(--color-accent-active);
+  background: var(--color-accent-light);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.shape-wrapper {
+  position: absolute;
+  cursor: move;
+}
+
+.text-shape {
+  min-width: 80px;
+  min-height: 30px;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--color-border-default);
+  background: white;
+}
+
+.selection-bounds {
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid var(--color-accent-active);
+}
+
+.resize-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: white;
+  border: 1px solid var(--color-accent-active);
+  pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+  .resize-handle {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .canvas-grid {
+    background-size: 15px 15px;
+  }
+
+  .resize-handle {
+    width: 14px;
+    height: 14px;
+  }
+}
+</style>

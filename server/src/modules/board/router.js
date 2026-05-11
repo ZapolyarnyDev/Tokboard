@@ -50,6 +50,22 @@ router.get('/:id', requireAuth, async (req, res) => {
   }
 })
 
+router.delete('/:boardId/objects/:objectId', requireAuth, async (req, res) => {
+  try {
+    const boardId = Number(req.params.boardId)
+    const objectId = Number(req.params.objectId)
+
+    if (!Number.isInteger(boardId) || boardId <= 0 || !Number.isInteger(objectId) || objectId <= 0) {
+      return res.status(400).json({ message: 'Некорректный ID доски или объекта' })
+    }
+
+    const result = await boardService.deleteObject(boardId, objectId)
+    return res.status(200).json(result)
+  } catch (e) {
+    return res.status(e.statusCode ?? 500).json({ message: e.message ?? 'Не удалось удалить объект' })
+  }
+})
+
 function parseImageBody(body) {
   const rawData = body?.dataUrl ?? body?.base64
   if (!rawData || typeof rawData !== 'string') return null
