@@ -5,12 +5,12 @@ const ui = useUiStore()
 
 const btnClass = (type) =>
   ui.tool === type
-    ? "p-2 border border-accent bg-accent-light text-accent transition-all"
-    : "p-2 border border-border hover:bg-bg-secondary hover:border-border-hover transition-all"
+    ? "toolbar-button is-active"
+    : "toolbar-button"
 </script>
 
 <template>
-  <div class="flex gap-2 border-b border-border bg-white p-2">
+  <div class="toolbar">
 
     <button
       @click="ui.setTool('select')"
@@ -86,3 +86,77 @@ const btnClass = (type) =>
 
   </div>
 </template>
+
+<style scoped>
+.toolbar {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--color-border-default);
+  background: white;
+  padding: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.toolbar-button {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid var(--color-border-default);
+  background: white;
+  color: var(--color-text-secondary);
+  transition: all 150ms;
+  border-radius: 4px;
+}
+
+.toolbar-button:hover {
+  border-color: var(--color-border-active);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.toolbar-button.is-active {
+  border-color: var(--color-accent-active);
+  background: var(--color-accent-light);
+  color: var(--color-accent-active);
+  box-shadow: 0 2px 6px rgba(77, 163, 255, 0.25);
+}
+
+.toolbar-button:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .toolbar {
+    padding: 0.5rem;
+    gap: 0.375rem;
+  }
+
+  .toolbar-button {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .toolbar {
+    padding: 0.375rem;
+    gap: 0.25rem;
+  }
+
+  .toolbar-button {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .toolbar-button svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+</style>

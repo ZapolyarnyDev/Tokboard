@@ -81,11 +81,23 @@ onMounted(loadBoards)
     </div>
 
     <div class="flex-1 overflow-y-auto p-3">
-      <div class="sidebar-content space-y-3">
-        <form class="space-y-2 border border-border bg-bg-secondary p-3" @submit.prevent="handleCreate">
-          <UiTypography.Title as="h3" size="h4" class="text-sm">Создать доску</UiTypography.Title>
-          <UiInput v-model="title" placeholder="Название доски" />
-          <UiButton type="submit" class="w-full" :disabled="isLoading">
+      <div class="sidebar-forms space-y-3">
+        <form class="sidebar-form" @submit.prevent="handleCreate">
+          <UiTypography.Title as="h3" size="h4" class="text-sm">
+            Создать доску
+          </UiTypography.Title>
+
+          <UiInput
+            v-model="title"
+            class="sidebar-input"
+            placeholder="Название доски"
+          />
+
+          <UiButton
+            type="submit"
+            class="sidebar-submit"
+            :disabled="isLoading"
+          >
             <span class="flex items-center justify-center gap-2">
               <Plus :size="16" />
               Создать
@@ -93,10 +105,23 @@ onMounted(loadBoards)
           </UiButton>
         </form>
 
-        <form class="space-y-2 border border-border bg-bg-secondary p-3" @submit.prevent="handleJoin">
-          <UiTypography.Title as="h3" size="h4" class="text-sm">Присоединиться к доске</UiTypography.Title>
-          <UiInput v-model="joinId" placeholder="ID доски" />
-          <UiButton type="submit" variant="secondary" class="w-full" :disabled="isLoading">
+        <form class="sidebar-form" @submit.prevent="handleJoin">
+          <UiTypography.Title as="h3" size="h4" class="text-sm">
+            Присоединиться к доске
+          </UiTypography.Title>
+
+          <UiInput
+            v-model="joinId"
+            class="sidebar-input"
+            placeholder="ID доски"
+          />
+
+          <UiButton
+            type="submit"
+            variant="secondary"
+            class="sidebar-submit"
+            :disabled="isLoading"
+          >
             <span class="flex items-center justify-center gap-2">
               <Users :size="16" />
               Войти
@@ -104,9 +129,10 @@ onMounted(loadBoards)
           </UiButton>
         </form>
 
-        <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
+        <p v-if="error" class="text-sm text-red-600">
+          {{ error }}
+        </p>
       </div>
-
       <nav class="mt-3 space-y-2" aria-label="Доски">
         <button
           v-for="board in ui.boards"
@@ -119,6 +145,7 @@ onMounted(loadBoards)
           <span class="board-icon">
             <SquareKanban :size="17" :stroke-width="2" />
           </span>
+
           <span class="min-w-0">
             <UiTypography.Title
               as="span"
@@ -129,6 +156,7 @@ onMounted(loadBoards)
             >
               {{ board.title }}
             </UiTypography.Title>
+
             <UiTypography.Muted as="span" class="mt-0.5 block" size="sm" truncate>
               ID: {{ board.id }}
             </UiTypography.Muted>
@@ -157,78 +185,182 @@ onMounted(loadBoards)
   flex-direction: column;
   overflow: hidden;
   border-right: 1px solid var(--color-border-default);
-  background: var(--color-bg-primary);
+  background: linear-gradient(to bottom, #fafafa 0%, #ffffff 100%);
   transition: width var(--transition);
-}
-
-.sidebar.is-collapsed {
-  width: 76px;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
 }
 
 .sidebar-content {
   display: block;
-  max-width: 240px;
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
   opacity: 1;
-  transition: opacity var(--transition), max-width var(--transition);
+  transition: opacity var(--transition), width var(--transition);
   white-space: nowrap;
 }
 
-.sidebar.is-collapsed .sidebar-content {
-  max-width: 0;
-  opacity: 0;
-  pointer-events: none;
+.sidebar-forms {
+  width: 100%;
+  min-width: 0;
 }
 
+.sidebar-form {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-secondary, #f8f8f8);
+  padding: 0.75rem;
+  border-radius: 6px;
+}
+
+.sidebar-input,
+.sidebar-submit {
+  width: 100%;
+  min-width: 0;
+}
+
+.sidebar-form :deep(input),
+.sidebar-form :deep(button) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.sidebar.is-collapsed .sidebar-forms {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .sidebar-form {
+    padding: 0.65rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-form {
+    padding: 0.75rem;
+  }
+}
 .sidebar-icon-button,
 .sidebar-action {
   display: flex;
-  min-height: 38px;
+  min-height: 40px;
   align-items: center;
   border: 1px solid var(--color-border-default);
-  background: var(--color-bg-primary);
+  background: white;
   color: var(--color-text-secondary);
+  transition: all 150ms;
+  border-radius: 4px;
 }
 
 .sidebar-icon-button {
   display: grid;
-  width: 38px;
+  width: 40px;
   place-items: center;
 }
 
 .sidebar-icon-button:hover,
 .sidebar-action:hover {
-  border-color: var(--color-border-active);
+  border-color: var(--color-accent-active);
   background: var(--color-accent-light);
   color: var(--color-accent-active);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(77, 163, 255, 0.15);
 }
 
 .board-button {
   display: grid;
   width: 100%;
-  min-height: 58px;
-  grid-template-columns: 38px minmax(0, 1fr);
+  min-height: 62px;
+  grid-template-columns: 40px minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   border: 1px solid transparent;
   background: transparent;
-  padding: 8px 10px;
+  padding: 10px 12px;
   color: var(--color-text-secondary);
   text-align: left;
+  transition: all 150ms;
+  border-radius: 4px;
 }
 
-.board-button:hover,
-.board-button.is-active {
+.board-button:hover {
   border-color: var(--color-border-active);
-  background: var(--color-accent-light);
+  background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
+  transform: translateX(2px);
+}
+
+.board-button.is-active {
+  border-color: var(--color-accent-active);
+  background: linear-gradient(135deg, var(--color-accent-light) 0%, #ffffff 100%);
+  box-shadow: 0 2px 8px rgba(77, 163, 255, 0.2);
 }
 
 .board-icon {
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   place-items: center;
   border: 1px solid var(--color-border-default);
-  background: var(--color-bg-primary);
+  background: white;
+  transition: all 150ms;
+  border-radius: 4px;
+}
+
+.board-button:hover .board-icon {
+  border-color: var(--color-accent-active);
+  background: var(--color-accent-light);
+  color: var(--color-accent-active);
+}
+
+.board-button.is-active .board-icon {
+  border-color: var(--color-accent-active);
+  background: var(--color-accent-active);
+  color: white;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 16rem;
+  }
+
+  .sidebar.is-collapsed {
+    width: 64px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 40;
+    width: 18rem;
+    height: 100%;
+    transform: translateX(0);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .sidebar.is-collapsed {
+    transform: translateX(-100%);
+    width: 18rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100%;
+    max-width: 20rem;
+  }
+
+  .sidebar.is-collapsed {
+    width: 100%;
+  }
 }
 </style>
