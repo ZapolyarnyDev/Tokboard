@@ -59,7 +59,7 @@ Frontend по умолчанию использует `VITE_API_URL=http://local
 
 ## Состав команды
 
-<tr>
+<table>
     <thead>
         <tr>
             <th>ФИО</th>
